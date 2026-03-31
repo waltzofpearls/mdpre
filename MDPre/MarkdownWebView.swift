@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 import WebKit
 
 struct MarkdownWebView: NSViewRepresentable {
@@ -17,6 +18,8 @@ struct MarkdownWebView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
+        let schemeHandler = LocalFileSchemeHandler()
+        config.setURLSchemeHandler(schemeHandler, forURLScheme: "mdpre-res")
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.allowsMagnification = true
@@ -65,6 +68,36 @@ struct MarkdownWebView: NSViewRepresentable {
                 webView.evaluateJavaScript("document.getElementById('\(safeFragment)')?.scrollIntoView()")
             }
         }
+    }
+
+    class LocalFileSchemeHandler: NSObject, WKURLSchemeHandler {
+        func webView(_ webView: WKWebView, start urlSchemeTask: any WKURLSchemeTask) {
+            guard let url = urlSchemeTask.request.url else {
+                urlSchemeTask.didFailWithError(URLError(.badURL))
+                return
+            }
+            var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+            components?.scheme = "file"
+            guard let fileURL = components?.url else {
+                urlSchemeTask.didFailWithError(URLError(.badURL))
+                return
+            }
+
+            let directory = fileURL.deletingLastPathComponent()
+            _ = FolderAccessManager.shared.startAccessing(directory: directory)
+
+            guard let data = try? Data(contentsOf: fileURL) else {
+                urlSchemeTask.didFailWithError(URLError(.fileDoesNotExist))
+                return
+            }
+            let mimeType = UTType(filenameExtension: fileURL.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+            let response = URLResponse(url: url, mimeType: mimeType, expectedContentLength: data.count, textEncodingName: nil)
+            urlSchemeTask.didReceive(response)
+            urlSchemeTask.didReceive(data)
+            urlSchemeTask.didFinish()
+        }
+
+        func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
     }
 
     class Coordinator: NSObject, WKNavigationDelegate {

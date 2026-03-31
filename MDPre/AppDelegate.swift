@@ -99,6 +99,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Set initial sidebar width
         splitVC.splitView.setPosition(260, ofDividerAt: 0)
 
+        // Persist folder access for images via security-scoped bookmark
+        FolderAccessManager.shared.saveBookmark(for: url)
+
         window.delegate = self
         folderWindows[path] = window
 

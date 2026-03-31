@@ -70,7 +70,26 @@
         }
     });
 
+    function resolveLocalURL(relative, baseURL, scheme) {
+        if (!relative || relative.startsWith('http://') || relative.startsWith('https://') ||
+            relative.startsWith('data:') || relative.startsWith('mailto:') || relative.startsWith('#')) {
+            return relative;
+        }
+        try {
+            return new URL(relative, baseURL).href.replace(/^file:\/\//, scheme + '://');
+        } catch(e) { return relative; }
+    }
+
     function renderMarkdown(text, baseURL) {
+        if (baseURL) {
+            // Rewrite image URLs BEFORE parsing so the browser never loads stale relative paths
+            text = text.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, function(m, pre, src, post) {
+                return pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post;
+            });
+            text = text.replace(/(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'])/gi, function(m, pre, src, post) {
+                return pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post;
+            });
+        }
         document.getElementById('content').innerHTML = marked.parse(text);
         if (baseURL) {
             document.querySelectorAll('#content a[href]').forEach(function(a) {
