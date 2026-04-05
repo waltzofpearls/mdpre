@@ -1,4 +1,4 @@
-# MDPre10
+# MDPre
 
 A lightweight macOS markdown preview app with GitHub-style rendering.
 

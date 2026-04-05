@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import CoreServices
 
 @Observable
 class FolderViewModel {
@@ -15,8 +16,7 @@ class FolderViewModel {
     var selectedFileContent: String = ""
 
     @ObservationIgnored weak var window: NSWindow?
-    private var directoryMonitor: DispatchSourceFileSystemObject?
-    private var directoryDebounce: DispatchSourceTimer?
+    private var eventStream: FSEventStreamRef?
     @ObservationIgnored private var fileWatcher: FileWatcher?
 
     init(folderURL: URL) {
@@ -26,8 +26,7 @@ class FolderViewModel {
     }
 
     deinit {
-        directoryDebounce?.cancel()
-        directoryMonitor?.cancel()
+        stopMonitoring()
         fileWatcher?.stopWatching()
     }
 
@@ -47,8 +46,8 @@ class FolderViewModel {
         }
         let sorted = markdownFiles.sorted(by: fileSortOrder)
 
-        // The directory monitor fires on any .write event including file content
-        // saves. Only proceed when files are actually added or removed.
+        // FSEvents fires for any change in the directory tree, including file
+        // content saves. Only proceed when files are actually added or removed.
         // FileWatcher handles content updates for the selected file.
         guard sorted != files else { return }
 
@@ -90,38 +89,45 @@ class FolderViewModel {
         startFileWatching()
     }
 
+    // MARK: - Directory monitoring (FSEvents)
+
+    /// Monitor the entire folder tree for file additions/removals using FSEvents.
+    /// The 0.2s latency coalesces rapid events (e.g. atomic saves that
+    /// rename-then-create) so loadFiles() sees the final state.
     private func startMonitoring() {
-        let fd = open(folderURL.path, O_EVTONLY)
-        guard fd >= 0 else { return }
-
-        let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fd,
-            eventMask: .write,
-            queue: .main
+        let selfPtr = Unmanaged.passUnretained(self).toOpaque()
+        var context = FSEventStreamContext(
+            version: 0, info: selfPtr,
+            retain: nil, release: nil, copyDescription: nil
         )
-        source.setEventHandler { [weak self] in
-            self?.scheduleLoadFiles()
-        }
-        source.setCancelHandler {
-            close(fd)
-        }
-        source.resume()
-        directoryMonitor = source
+        guard let stream = FSEventStreamCreate(
+            nil,
+            { _, info, _, _, _, _ in
+                guard let info else { return }
+                Unmanaged<FolderViewModel>.fromOpaque(info)
+                    .takeUnretainedValue()
+                    .loadFiles()
+            },
+            &context,
+            [folderURL.path as CFString] as CFArray,
+            FSEventStreamEventId(kFSEventStreamEventIdSinceNow),
+            0.2,
+            UInt32(kFSEventStreamCreateFlagUseCFTypes)
+        ) else { return }
+        FSEventStreamSetDispatchQueue(stream, .main)
+        FSEventStreamStart(stream)
+        eventStream = stream
     }
 
-    /// Debounce directory events to let atomic saves finish.
-    /// Editors like vim rename-then-create in rapid succession; without a delay,
-    /// loadFiles() can see the intermediate state where the file is missing.
-    private func scheduleLoadFiles() {
-        directoryDebounce?.cancel()
-        let timer = DispatchSource.makeTimerSource(queue: .main)
-        timer.schedule(deadline: .now() + .milliseconds(200))
-        timer.setEventHandler { [weak self] in
-            self?.loadFiles()
-        }
-        timer.resume()
-        directoryDebounce = timer
+    private func stopMonitoring() {
+        guard let stream = eventStream else { return }
+        FSEventStreamStop(stream)
+        FSEventStreamInvalidate(stream)
+        FSEventStreamRelease(stream)
+        eventStream = nil
     }
+
+    // MARK: - File watching (selected file content)
 
     private func startFileWatching() {
         fileWatcher?.stopWatching()
