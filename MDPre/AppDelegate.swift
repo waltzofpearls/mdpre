@@ -32,6 +32,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func openFolderPanel() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose a folder to preview markdown files"
+        panel.begin { [weak self] response in
+            guard response == .OK, let url = panel.url else { return }
+            self?.openFolderWindow(for: url)
+        }
+    }
+
     private func openFolderWindow(for url: URL) {
         let path = url.standardizedFileURL.path
 

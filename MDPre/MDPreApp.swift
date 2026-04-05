@@ -12,11 +12,17 @@ struct MDPreApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
 
     var body: some Scene {
-        DocumentGroup(newDocument: MDPreDocument()) { file in
+        DocumentGroup(viewing: MDPreDocument.self) { file in
             ContentView(document: file.$document, fileURL: file.fileURL)
         }
         .defaultSize(width: 980, height: 760)
         .commands {
+            CommandGroup(after: .newItem) {
+                Button("Open Folder...") {
+                    appDelegate.openFolderPanel()
+                }
+                .keyboardShortcut("o", modifiers: [.command, .shift])
+            }
             ExportCommands()
         }
     }
