@@ -47,7 +47,9 @@ func openFiles(_ paths: [String]) {
     var fileURLs: [URL] = []
 
     for path in paths {
-        let url = URL(fileURLWithPath: path).standardizedFileURL
+        let expanded = path.hasPrefix("~") ? (path as NSString).expandingTildeInPath : path
+        let absolute = expanded.hasPrefix("/") ? expanded : (ProcessInfo.processInfo.environment["PWD"] ?? fileManager.currentDirectoryPath) + "/" + expanded
+        let url = URL(fileURLWithPath: absolute).standardizedFileURL
         var isDir: ObjCBool = false
 
         guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir) else {

@@ -14,10 +14,12 @@ struct ContentView: View {
     @State private var exportHandler: ExportHandler?
     @State private var renderID = 0
     @State private var hasCheckedAccess = false
+    @State private var displayText = ""
+    @State private var fileWatcher: FileWatcher?
 
     var body: some View {
         MarkdownWebView(
-            markdown: document.text,
+            markdown: displayText,
             sourceFileURL: fileURL,
             exportHandler: exportHandler,
             onNavigateToFile: { url in
@@ -29,10 +31,19 @@ struct ContentView: View {
             .id(renderID)
             .frame(minWidth: 700, idealWidth: 980, minHeight: 500, idealHeight: 700)
             .onAppear {
-                exportHandler = ExportHandler(markdown: document.text)
+                displayText = document.text
+                exportHandler = ExportHandler(markdown: displayText)
                 checkFolderAccessIfNeeded()
+                startFileWatcher()
+            }
+            .onDisappear {
+                fileWatcher?.stopWatching()
+                fileWatcher = nil
             }
             .onChange(of: document.text) { _, newValue in
+                displayText = newValue
+            }
+            .onChange(of: displayText) { _, newValue in
                 exportHandler?.markdown = newValue
                 checkFolderAccessIfNeeded()
             }
@@ -42,8 +53,8 @@ struct ContentView: View {
     private func checkFolderAccessIfNeeded() {
         guard !hasCheckedAccess else { return }
         guard let fileURL else { return }
-        guard !document.text.isEmpty else { return }
-        guard Self.hasLocalImages(in: document.text) else {
+        guard !displayText.isEmpty else { return }
+        guard Self.hasLocalImages(in: displayText) else {
             hasCheckedAccess = true
             return
         }
@@ -61,6 +72,15 @@ struct ContentView: View {
                     renderID += 1
                 }
             }
+        }
+    }
+
+    private func startFileWatcher() {
+        fileWatcher?.stopWatching()
+        fileWatcher = nil
+        guard let fileURL else { return }
+        fileWatcher = FileWatcher(url: fileURL) { newContent in
+            displayText = newContent
         }
     }
 

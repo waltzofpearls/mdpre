@@ -29,7 +29,7 @@ struct SidebarRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(fileURL.deletingPathExtension().lastPathComponent)
+            Text(fileURL.lastPathComponent)
                 .font(.body)
                 .lineLimit(1)
 
@@ -47,9 +47,9 @@ struct SidebarRow: View {
     private func relativeDirectory() -> String {
         let filePath = fileURL.deletingLastPathComponent().path
         let folderPath = folderURL.path
-        guard filePath != folderPath else { return "" }
+        guard filePath != folderPath else { return "./" }
         let prefix = folderPath.hasSuffix("/") ? folderPath : folderPath + "/"
-        guard filePath.hasPrefix(prefix) else { return "" }
-        return String(filePath.dropFirst(prefix.count))
+        guard filePath.hasPrefix(prefix) else { return "./" }
+        return "./" + String(filePath.dropFirst(prefix.count)) + "/"
     }
 }
