@@ -2,8 +2,10 @@
 
 A lightweight macOS app for previewing Markdown files with GitHub-style rendering.
 
-![Light mode](docs/light.png)
-![Dark mode](docs/dark.png)
+<p>
+  <img src="docs/light.png" alt="Light mode" width="49%">
+  <img src="docs/dark.png" alt="Dark mode" width="49%">
+</p>
 
 ## Features
 
