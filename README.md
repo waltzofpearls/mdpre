@@ -2,6 +2,9 @@
 
 A lightweight macOS app for previewing Markdown files with GitHub-style rendering.
 
+![Light mode](docs/light.png)
+![Dark mode](docs/dark.png)
+
 ## Features
 
 - **GitHub Flavored Markdown** — rendered with [marked](https://github.com/markedjs/marked) and [github-markdown-css](https://github.com/sindresorhus/github-markdown-css), with syntax highlighting via [highlight.js](https://highlightjs.org/)
