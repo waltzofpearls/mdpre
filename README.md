@@ -1,40 +1,56 @@
 # MDPre
 
-A lightweight macOS markdown preview app with GitHub-style rendering.
+A lightweight macOS app for previewing Markdown files with GitHub-style rendering.
 
 ## Features
 
-- GitHub Flavored Markdown rendering with syntax highlighting
-- Single file and folder viewing modes
-- Folder mode with sidebar navigation (Preview.app-like)
-- Internal markdown link navigation between documents
-- Export as PDF, HTML, or print
-- Pinch-to-zoom support
-- Dark mode support
-- Live directory monitoring for file changes
+- **GitHub Flavored Markdown** — rendered with [marked](https://github.com/markedjs/marked) and [github-markdown-css](https://github.com/sindresorhus/github-markdown-css), with syntax highlighting via [highlight.js](https://highlightjs.org/)
+- **Folder mode** — browse a directory of Markdown files with a sidebar, similar to Preview.app
+- **Live reload** — automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
+- **Internal link navigation** — click relative links between Markdown documents
+- **Relative image loading** — images referenced with relative paths render correctly
+- **Export** — save as PDF (Cmd+E), HTML (Cmd+Shift+E), or print (Cmd+P)
+- **Pinch-to-zoom** — scale content with trackpad gestures
+- **Dark mode** — follows system appearance
+- **CLI tool** — open files and folders from the terminal with `mdp`
 
-## CLI
+## Requirements
 
-MDPre includes a command-line tool `mdp` for quick previewing:
+- macOS 15.7 or later
+- Xcode 16 or later (to build from source)
+
+## Build
 
 ```sh
-# Preview a single file
-mdp README.md
-
-# Preview all markdown files in a folder
-mdp ./docs/
+git clone https://github.com/waltzofpearls/mdpre.git
+cd mdpre
+open MDPre.xcodeproj
 ```
 
-## Install
+Then build and run in Xcode (Cmd+R).
 
-Build from source in Xcode. Requires macOS 15.7 or later.
+## CLI Tool
 
-The `mdp` CLI is bundled inside the app at `MDPre.app/Contents/MacOS/mdp`. Symlink it to your PATH:
+MDPre bundles a command-line tool called `mdp`.
+
+### Usage
 
 ```sh
-ln -s /Applications/MDPre.app/Contents/MacOS/mdp /usr/local/bin/mdp
+mdp README.md          # preview a single file
+mdp ./docs/            # preview a folder with sidebar
+mdp file1.md file2.md  # open multiple files
+```
+
+### Installing
+
+From the app menu: **Markdown Preview > Install Command Line Tool...**
+
+Or manually create a symlink:
+
+```sh
+sudo ln -sf /Applications/Markdown\ Preview.app/Contents/MacOS/mdp /usr/local/bin/mdp
 ```
 
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -23,6 +23,17 @@ struct MDPreApp: App {
                 }
                 .keyboardShortcut("o", modifiers: [.command, .shift])
             }
+            CommandGroup(after: .appSettings) {
+                if CLIInstaller.isInstalled {
+                    Button("Uninstall Command Line Tool...") {
+                        CLIInstaller.uninstall()
+                    }
+                } else {
+                    Button("Install Command Line Tool...") {
+                        CLIInstaller.install()
+                    }
+                }
+            }
             ExportCommands()
         }
     }
