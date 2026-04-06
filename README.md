@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/icon.png" alt="MDPre" width="128">
+</p>
+
 # MDPre
 
 A lightweight macOS app for previewing Markdown files with GitHub-style rendering.
