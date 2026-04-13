@@ -1,0 +1,13 @@
+{
+  "notarize": [
+    {
+      "path": "./build/bin/Markdown-Preview.dmg",
+      "bundle_id": "dev.rollie.mdpre",
+      "staple": true
+    }
+  ],
+  "apple_id": {
+    "username": "rollie.ma@gmail.com",
+    "provider": "L2AR6TDY65"
+  }
+}

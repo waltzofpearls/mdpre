@@ -71,3 +71,7 @@ fastlane/test_output
 
 # Derived Data
 DerivedData/
+
+# Build artifacts
+build/bin/
+build/tmp/
