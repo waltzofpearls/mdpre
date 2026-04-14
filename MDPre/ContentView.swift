@@ -48,6 +48,11 @@ struct ContentView: View {
                 checkFolderAccessIfNeeded()
             }
             .focusedSceneValue(\.exportHandler, exportHandler)
+            .toolbar {
+                ToolbarItem(placement: .automatic) {
+                    TableOfContentsToolbarButton()
+                }
+            }
     }
 
     private func checkFolderAccessIfNeeded() {

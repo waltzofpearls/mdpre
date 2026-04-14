@@ -8,6 +8,10 @@
 import AppKit
 import SwiftUI
 
+extension NSToolbarItem.Identifier {
+    static let tableOfContents = NSToolbarItem.Identifier("tableOfContents")
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var folderWindows: [String: NSWindow] = [:]
 
@@ -134,6 +138,8 @@ extension AppDelegate: NSToolbarDelegate {
         [
             .toggleSidebar,
             .sidebarTrackingSeparator,
+            .flexibleSpace,
+            .tableOfContents,
         ]
     }
 
@@ -146,7 +152,27 @@ extension AppDelegate: NSToolbarDelegate {
         itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
         willBeInsertedIntoToolbar flag: Bool
     ) -> NSToolbarItem? {
-        nil // .toggleSidebar and .sidebarTrackingSeparator are auto-created by the system
+        switch itemIdentifier {
+        case .tableOfContents:
+            let item = NSToolbarItem(itemIdentifier: .tableOfContents)
+            let button = NSButton(
+                image: NSImage(systemSymbolName: "list.bullet", accessibilityDescription: "Table of Contents")!,
+                target: self,
+                action: #selector(showTableOfContents(_:))
+            )
+            button.bezelStyle = .toolbar
+            item.view = button
+            item.label = "Table of Contents"
+            item.toolTip = "Table of Contents"
+            return item
+        default:
+            return nil
+        }
+    }
+
+    @objc private func showTableOfContents(_ sender: NSButton) {
+        guard let webView = TableOfContents.findWebView(in: sender.window) else { return }
+        TableOfContents.showMenu(from: webView, relativeTo: sender)
     }
 }
 

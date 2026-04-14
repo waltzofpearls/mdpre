@@ -106,6 +106,37 @@
         }
     }
 
+    function getTableOfContents() {
+        var headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
+        var toc = [];
+        var idCounts = {};
+        for (var i = 0; i < headings.length; i++) {
+            var h = headings[i];
+            if (!h.id) {
+                var slug = h.textContent.trim().toLowerCase()
+                    .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
+                if (idCounts[slug] !== undefined) {
+                    idCounts[slug]++;
+                    slug += '-' + idCounts[slug];
+                } else {
+                    idCounts[slug] = 0;
+                }
+                h.id = slug;
+            }
+            toc.push({
+                level: parseInt(h.tagName.charAt(1)),
+                text: h.textContent.trim(),
+                id: h.id
+            });
+        }
+        return JSON.stringify(toc);
+    }
+
+    function scrollToHeading(id) {
+        var el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function setFullWidth(enabled) {
         var content = document.getElementById('content');
         if (enabled) {
