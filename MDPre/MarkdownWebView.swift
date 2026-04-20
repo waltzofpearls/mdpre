@@ -15,11 +15,14 @@ struct MarkdownWebView: NSViewRepresentable {
     var exportHandler: ExportHandler?
     var fullWidth: Bool = false
     var onNavigateToFile: ((URL) -> Void)?
+    var initialScrollPercent: Double = 0
+    var onScrollSync: ((Double) -> Void)?
 
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
         let schemeHandler = LocalFileSchemeHandler()
         config.setURLSchemeHandler(schemeHandler, forURLScheme: "mdpre-res")
+        config.userContentController.add(context.coordinator, name: "scrollSync")
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.allowsMagnification = true
@@ -37,9 +40,12 @@ struct MarkdownWebView: NSViewRepresentable {
         exportHandler?.webView = webView
 
         if context.coordinator.isLoaded {
-            let fragment = context.coordinator.pendingFragment
-            context.coordinator.pendingFragment = nil
-            renderMarkdown(in: webView, thenScrollTo: fragment)
+            if markdown != context.coordinator.lastRenderedMarkdown {
+                context.coordinator.lastRenderedMarkdown = markdown
+                let fragment = context.coordinator.pendingFragment
+                context.coordinator.pendingFragment = nil
+                renderMarkdown(in: webView, thenScrollTo: fragment)
+            }
         } else {
             context.coordinator.pendingMarkdown = markdown
         }
@@ -100,11 +106,12 @@ struct MarkdownWebView: NSViewRepresentable {
         func webView(_ webView: WKWebView, stop urlSchemeTask: any WKURLSchemeTask) {}
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         var parent: MarkdownWebView
         var isLoaded = false
         var pendingMarkdown: String?
         var pendingFragment: String?
+        var lastRenderedMarkdown: String?
 
         init(parent: MarkdownWebView) {
             self.parent = parent
@@ -117,11 +124,23 @@ struct MarkdownWebView: NSViewRepresentable {
             }
             if let markdown = pendingMarkdown {
                 pendingMarkdown = nil
+                lastRenderedMarkdown = markdown
                 let escaped = markdown
                     .replacingOccurrences(of: "\\", with: "\\\\")
                     .replacingOccurrences(of: "`", with: "\\`")
                     .replacingOccurrences(of: "${", with: "\\${")
-                webView.evaluateJavaScript("renderMarkdown(`\(escaped)`, `\(parent.baseURLJS)`)")
+                webView.evaluateJavaScript("renderMarkdown(`\(escaped)`, `\(parent.baseURLJS)`)") { _, _ in
+                    let percent = self.parent.initialScrollPercent
+                    if percent > 0 {
+                        webView.evaluateJavaScript("scrollToPercent(\(percent))")
+                    }
+                }
+            }
+        }
+
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            if message.name == "scrollSync", let percent = message.body as? Double {
+                parent.onScrollSync?(percent)
             }
         }
 

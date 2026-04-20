@@ -20,6 +20,10 @@ A lightweight macOS app for previewing Markdown files with GitHub-style renderin
 - **Relative image loading** — images referenced with relative paths render correctly
 - **Export** — save as PDF (Cmd+E), HTML (Cmd+Shift+E), or print (Cmd+P)
 - **Pinch-to-zoom** — scale content with trackpad gestures
+- **Find in document** — search with live highlighting and match navigation (Cmd+F)
+- **Table of contents** — jump to any section from the toolbar dropdown
+- **Source view** — syntax-highlighted raw markdown source
+- **Side-by-side view** — source and preview with synchronized scrolling
 - **Dark mode** — follows system appearance
 - **CLI tool** — open files and folders from the terminal with `mdp`
 
@@ -37,6 +41,16 @@ open MDPre.xcodeproj
 ```
 
 Then build and run in Xcode (Cmd+R).
+
+### Release Build
+
+To build a signed and notarized DMG for distribution:
+
+```sh
+APPLE_PASSWORD=your-app-specific-password make build
+```
+
+This runs: xcodebuild → gon sign → create-dmg → gon notarize. See the [Makefile](Makefile) for details.
 
 ## CLI Tool
 
@@ -62,4 +76,4 @@ sudo ln -sf /Applications/Markdown\ Preview.app/Contents/MacOS/mdp /usr/local/bi
 
 ## License
 
-[MIT](LICENSE)
+[Apache 2.0](LICENSE)

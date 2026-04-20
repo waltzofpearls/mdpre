@@ -3,10 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="github-markdown.css">
 <link rel="stylesheet" href="highlight-github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="highlight-github-dark.min.css" media="(prefers-color-scheme: dark)">
-<script src="marked.min.js"></script>
 <script src="highlight.min.js"></script>
 <style>
     body {
@@ -14,23 +12,26 @@
         padding: 0;
     }
     @media (prefers-color-scheme: light) {
-        body { background-color: #cecece; }
+        body { background-color: #ffffff; }
     }
     @media (prefers-color-scheme: dark) {
-        body { background-color: #3b3b3b; }
+        body { background-color: #1e1e1e; }
     }
-    .markdown-body {
-        box-sizing: border-box;
-        min-width: 200px;
-        max-width: 980px;
-        margin: 0 auto;
-        padding: 45px;
-        background-color: var(--bgColor-default);
+    html, body {
+        height: 100%;
     }
-    @media (max-width: 767px) {
-        .markdown-body {
-            padding: 15px;
-        }
+    #source {
+        margin: 0;
+        padding: 24px;
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        tab-size: 4;
+    }
+    pre {
+        margin: 0;
     }
     mark.find-highlight {
         background: #ffeb3b;
@@ -49,26 +50,6 @@
         }
     }
     @media print {
-        @page {
-            size: A4;
-            margin: 20mm;
-        }
-        body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-        }
-        .markdown-body {
-            max-width: none;
-            padding: 0;
-        }
-        pre, code, table, figure, blockquote {
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            page-break-after: avoid;
-            break-after: avoid;
-        }
         mark.find-highlight, mark.find-current {
             background: none;
         }
@@ -76,84 +57,16 @@
 </style>
 </head>
 <body>
-<article class="markdown-body" id="content"></article>
+<pre><code id="source" class="language-markdown"></code></pre>
 <script>
-    marked.setOptions({
-        gfm: true,
-        breaks: false,
-        highlight: (code, lang) => {
-            if (lang && hljs.getLanguage(lang)) {
-                return hljs.highlight(code, { language: lang }).value;
-            }
-            return hljs.highlightAuto(code).value;
-        }
-    });
-
-    function resolveLocalURL(relative, baseURL, scheme) {
-        if (!relative || relative.startsWith('http://') || relative.startsWith('https://') ||
-            relative.startsWith('data:') || relative.startsWith('mailto:') || relative.startsWith('#')) {
-            return relative;
-        }
-        try {
-            return new URL(relative, baseURL).href.replace(/^file:\/\//, `${scheme}://`);
-        } catch { return relative; }
+    function renderSource(text) {
+        const el = document.getElementById('source');
+        el.textContent = text;
+        hljs.highlightElement(el);
     }
 
-    function renderMarkdown(text, baseURL) {
-        clearFind();
-        document.documentElement.scrollTop = 0;
-        if (baseURL) {
-            text = text.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, (_, pre, src, post) =>
-                pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post
-            );
-            text = text.replace(/(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'])/gi, (_, pre, src, post) =>
-                pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post
-            );
-        }
-        document.getElementById('content').innerHTML = marked.parse(text);
-        if (baseURL) {
-            document.querySelectorAll('#content a[href]').forEach(a => {
-                const href = a.getAttribute('href');
-                if (!href || href.startsWith('#') || href.startsWith('http://') ||
-                    href.startsWith('https://') || href.startsWith('mailto:')) {
-                    return;
-                }
-                try {
-                    const resolved = new URL(href, baseURL).href;
-                    a.href = resolved.replace(/^file:\/\//, 'mdpre-file://');
-                } catch {}
-            });
-        }
-    }
-
-    function getTableOfContents() {
-        const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
-        const toc = [];
-        const idCounts = {};
-        for (const h of headings) {
-            if (!h.id) {
-                let slug = h.textContent.trim().toLowerCase()
-                    .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
-                if (idCounts[slug] !== undefined) {
-                    idCounts[slug]++;
-                    slug += `-${idCounts[slug]}`;
-                } else {
-                    idCounts[slug] = 0;
-                }
-                h.id = slug;
-            }
-            toc.push({
-                level: parseInt(h.tagName.charAt(1)),
-                text: h.textContent.trim(),
-                id: h.id
-            });
-        }
-        return JSON.stringify(toc);
-    }
-
-    function scrollToHeading(id) {
-        const el = document.getElementById(id);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    function setFullWidth(enabled) {
+        // No-op for source view — always full width
     }
 
     // --- Scroll sync (percentage-based) ---
@@ -184,15 +97,7 @@
         }
     }, { passive: true });
 
-    function setFullWidth(enabled) {
-        const content = document.getElementById('content');
-        if (enabled) {
-            content.style.maxWidth = 'none';
-            content.style.margin = '0';
-        }
-    }
-
-    // --- Find in page ---
+    // --- Find in page (same as template.html) ---
 
     let findMatches = [];
     let findIndex = -1;
@@ -201,8 +106,8 @@
         clearFind();
         if (!query) return JSON.stringify({ total: 0, current: 0 });
 
-        const content = document.getElementById('content');
-        const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+        const el = document.getElementById('source');
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
         const textNodes = [];
         while (walker.nextNode()) textNodes.push(walker.currentNode);
 

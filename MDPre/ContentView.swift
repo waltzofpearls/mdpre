@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import WebKit
 
 struct ContentView: View {
     @Binding var document: MDPreDocument
@@ -17,13 +18,81 @@ struct ContentView: View {
     @State private var displayText = ""
     @State private var fileWatcher: FileWatcher?
     @State private var showFindBar = false
+    @State private var viewMode: ViewMode = .preview
+    @State private var scrollPercent: Double = 0
 
     var body: some View {
         VStack(spacing: 0) {
             if showFindBar {
                 FindBar(isVisible: $showFindBar)
             }
-            MarkdownWebView(
+            switch viewMode {
+            case .preview:
+                markdownPreview
+            case .source:
+                SourceWebView(
+                    markdown: displayText,
+                    initialScrollPercent: scrollPercent,
+                    onScrollSync: { percent in
+                        scrollPercent = percent
+                    }
+                )
+            case .split:
+                HSplitView {
+                    SourceWebView(
+                        markdown: displayText,
+                        initialScrollPercent: scrollPercent,
+                        onScrollSync: { percent in
+                            scrollPercent = percent
+                            syncScroll(percent: percent, fromSource: true)
+                        }
+                    )
+                    .frame(minWidth: 200)
+                    .overlay(alignment: .trailing) {
+                        Rectangle()
+                            .fill(Color(nsColor: .separatorColor))
+                            .frame(width: 1)
+                    }
+                    markdownPreview
+                        .frame(minWidth: 200)
+                }
+            }
+        }
+        .frame(minWidth: 700, idealWidth: 980, minHeight: 500, idealHeight: 700)
+        .onAppear {
+            displayText = document.text
+            exportHandler = ExportHandler(markdown: displayText)
+            checkFolderAccessIfNeeded()
+            startFileWatcher()
+        }
+        .onDisappear {
+            fileWatcher?.stopWatching()
+            fileWatcher = nil
+        }
+        .onChange(of: document.text) { _, newValue in
+            displayText = newValue
+        }
+        .onChange(of: displayText) { _, newValue in
+            exportHandler?.markdown = newValue
+            checkFolderAccessIfNeeded()
+        }
+        .focusedSceneValue(\.exportHandler, exportHandler)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                ViewModeToolbarButton(viewMode: $viewMode)
+            }
+            ToolbarItem(placement: .automatic) {
+                TableOfContentsToolbarButton()
+                    .disabled(viewMode != .preview)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleFindBar)) { _ in
+            showFindBar.toggle()
+        }
+    }
+
+    private var markdownPreview: some View {
+        MarkdownWebView(
             markdown: displayText,
             sourceFileURL: fileURL,
             exportHandler: exportHandler,
@@ -31,37 +100,35 @@ struct ContentView: View {
                 NSDocumentController.shared.openDocument(
                     withContentsOf: url, display: true
                 ) { _, _, _ in }
-            }
-        )
-            .id(renderID)
-            .frame(minWidth: 700, idealWidth: 980, minHeight: 500, idealHeight: 700)
-            .onAppear {
-                displayText = document.text
-                exportHandler = ExportHandler(markdown: displayText)
-                checkFolderAccessIfNeeded()
-                startFileWatcher()
-            }
-            .onDisappear {
-                fileWatcher?.stopWatching()
-                fileWatcher = nil
-            }
-            .onChange(of: document.text) { _, newValue in
-                displayText = newValue
-            }
-            .onChange(of: displayText) { _, newValue in
-                exportHandler?.markdown = newValue
-                checkFolderAccessIfNeeded()
-            }
-            .focusedSceneValue(\.exportHandler, exportHandler)
-            .toolbar {
-                ToolbarItem(placement: .automatic) {
-                    TableOfContentsToolbarButton()
+            },
+            initialScrollPercent: scrollPercent,
+            onScrollSync: { percent in
+                scrollPercent = percent
+                if viewMode == .split {
+                    syncScroll(percent: percent, fromSource: false)
                 }
             }
+        )
+        .id(renderID)
+    }
+
+    private func syncScroll(percent: Double, fromSource: Bool) {
+        guard let window = NSApp.keyWindow,
+              let contentView = window.contentView else { return }
+        let webViews = findAllWebViews(in: contentView)
+        guard webViews.count >= 2 else { return }
+        // Source is first in the HSplitView, preview is second
+        let targetWebView = fromSource ? webViews[1] : webViews[0]
+        targetWebView.evaluateJavaScript("scrollToPercent(\(percent))")
+    }
+
+    private func findAllWebViews(in view: NSView) -> [WKWebView] {
+        var results: [WKWebView] = []
+        if let wv = view as? WKWebView { results.append(wv) }
+        for subview in view.subviews {
+            results.append(contentsOf: findAllWebViews(in: subview))
         }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleFindBar)) { _ in
-            showFindBar.toggle()
-        }
+        return results
     }
 
     private func checkFolderAccessIfNeeded() {

@@ -10,10 +10,12 @@ import SwiftUI
 
 extension NSToolbarItem.Identifier {
     static let tableOfContents = NSToolbarItem.Identifier("tableOfContents")
+    static let viewMode = NSToolbarItem.Identifier("viewMode")
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var folderWindows: [String: NSWindow] = [:]
+    private var folderViewModels: [String: FolderViewModel] = [:]
 
     func application(_ application: NSApplication, open urls: [URL]) {
         var fileURLs: [URL] = []
@@ -121,6 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.delegate = self
         folderWindows[path] = window
+        folderViewModels[path] = viewModel
 
         // Restore saved frame if it exists, otherwise center
         let autosaveName = "FolderWindow-v2-\(path.hashValue)"
@@ -139,6 +142,7 @@ extension AppDelegate: NSToolbarDelegate {
         [
             .toggleSidebar,
             .sidebarTrackingSeparator,
+            .viewMode,
             .flexibleSpace,
             .tableOfContents,
         ]
@@ -154,6 +158,26 @@ extension AppDelegate: NSToolbarDelegate {
         willBeInsertedIntoToolbar flag: Bool
     ) -> NSToolbarItem? {
         switch itemIdentifier {
+        case .viewMode:
+            let item = NSToolbarItem(itemIdentifier: .viewMode)
+            let images = [
+                toolbarSymbolImage("eye", "Preview"),
+                toolbarSymbolImage("chevron.left.forwardslash.chevron.right", "Source"),
+                toolbarSymbolImage("rectangle.split.2x1", "Split"),
+            ]
+            let labels = ["Preview", "Source", "Split"]
+            let control = NSSegmentedControl(images: images, trackingMode: .selectOne, target: self, action: #selector(viewModeChanged(_:)))
+            control.segmentCount = 3
+            for i in 0..<3 {
+                control.setImage(images[i], forSegment: i)
+                control.setLabel(labels[i], forSegment: i)
+            }
+            control.segmentStyle = .automatic
+            control.controlSize = .small
+            control.selectedSegment = 0
+            item.view = control
+            item.label = "View Mode"
+            return item
         case .tableOfContents:
             let item = NSToolbarItem(itemIdentifier: .tableOfContents)
             let button = NSButton(
@@ -171,6 +195,30 @@ extension AppDelegate: NSToolbarDelegate {
         }
     }
 
+    private func toolbarSymbolImage(_ name: String, _ description: String) -> NSImage {
+        let config = NSImage.SymbolConfiguration(pointSize: 10, weight: .regular)
+        let image = NSImage(systemSymbolName: name, accessibilityDescription: description)!
+            .withSymbolConfiguration(config)!
+        var rect = image.alignmentRect
+        rect.origin.y -= 1.5
+        rect.size.height += 1.5
+        image.alignmentRect = rect
+        return image
+    }
+
+    @objc private func viewModeChanged(_ sender: NSSegmentedControl) {
+        guard let window = sender.window,
+              let path = folderWindows.first(where: { $0.value === window })?.key,
+              let viewModel = folderViewModels[path] else { return }
+        let modes = ViewMode.allCases
+        if sender.selectedSegment < modes.count {
+            viewModel.viewMode = modes[sender.selectedSegment]
+        }
+        if let tocItem = window.toolbar?.items.first(where: { $0.itemIdentifier == .tableOfContents }) {
+            tocItem.isEnabled = viewModel.viewMode == .preview
+        }
+    }
+
     @objc private func showTableOfContents(_ sender: NSButton) {
         guard let webView = TableOfContents.findWebView(in: sender.window) else { return }
         TableOfContents.showMenu(from: webView, relativeTo: sender)
@@ -182,6 +230,10 @@ extension AppDelegate: NSToolbarDelegate {
 extension AppDelegate: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
-        folderWindows = folderWindows.filter { $0.value !== window }
+        let closedPaths = folderWindows.filter { $0.value === window }.map(\.key)
+        for path in closedPaths {
+            folderWindows.removeValue(forKey: path)
+            folderViewModels.removeValue(forKey: path)
+        }
     }
 }
