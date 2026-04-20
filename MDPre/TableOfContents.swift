@@ -1,3 +1,10 @@
+//
+//  TableOfContents.swift
+//  MDPre
+//
+//  Created by waltzofpearls on 2026-04-13.
+//
+
 import AppKit
 import SwiftUI
 import WebKit

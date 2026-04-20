@@ -32,6 +32,22 @@
             padding: 15px;
         }
     }
+    mark.find-highlight {
+        background: #ffeb3b;
+        color: inherit;
+    }
+    mark.find-current {
+        background: #f9a825;
+        border-radius: 2px;
+    }
+    @media (prefers-color-scheme: dark) {
+        mark.find-highlight {
+            background: #7b6a1e;
+        }
+        mark.find-current {
+            background: #b8941e;
+        }
+    }
     @media print {
         @page {
             size: A4;
@@ -53,6 +69,9 @@
             page-break-after: avoid;
             break-after: avoid;
         }
+        mark.find-highlight, mark.find-current {
+            background: none;
+        }
     }
 </style>
 </head>
@@ -62,7 +81,7 @@
     marked.setOptions({
         gfm: true,
         breaks: false,
-        highlight: function(code, lang) {
+        highlight: (code, lang) => {
             if (lang && hljs.getLanguage(lang)) {
                 return hljs.highlight(code, { language: lang }).value;
             }
@@ -76,48 +95,47 @@
             return relative;
         }
         try {
-            return new URL(relative, baseURL).href.replace(/^file:\/\//, scheme + '://');
-        } catch(e) { return relative; }
+            return new URL(relative, baseURL).href.replace(/^file:\/\//, `${scheme}://`);
+        } catch { return relative; }
     }
 
     function renderMarkdown(text, baseURL) {
+        clearFind();
         if (baseURL) {
-            // Rewrite image URLs BEFORE parsing so the browser never loads stale relative paths
-            text = text.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, function(m, pre, src, post) {
-                return pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post;
-            });
-            text = text.replace(/(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'])/gi, function(m, pre, src, post) {
-                return pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post;
-            });
+            text = text.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, (_, pre, src, post) =>
+                pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post
+            );
+            text = text.replace(/(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'])/gi, (_, pre, src, post) =>
+                pre + resolveLocalURL(src, baseURL, 'mdpre-res') + post
+            );
         }
         document.getElementById('content').innerHTML = marked.parse(text);
         if (baseURL) {
-            document.querySelectorAll('#content a[href]').forEach(function(a) {
-                var href = a.getAttribute('href');
+            document.querySelectorAll('#content a[href]').forEach(a => {
+                const href = a.getAttribute('href');
                 if (!href || href.startsWith('#') || href.startsWith('http://') ||
                     href.startsWith('https://') || href.startsWith('mailto:')) {
                     return;
                 }
                 try {
-                    var resolved = new URL(href, baseURL).href;
+                    const resolved = new URL(href, baseURL).href;
                     a.href = resolved.replace(/^file:\/\//, 'mdpre-file://');
-                } catch(e) {}
+                } catch {}
             });
         }
     }
 
     function getTableOfContents() {
-        var headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
-        var toc = [];
-        var idCounts = {};
-        for (var i = 0; i < headings.length; i++) {
-            var h = headings[i];
+        const headings = document.querySelectorAll('#content h1, #content h2, #content h3, #content h4, #content h5, #content h6');
+        const toc = [];
+        const idCounts = {};
+        for (const h of headings) {
             if (!h.id) {
-                var slug = h.textContent.trim().toLowerCase()
+                let slug = h.textContent.trim().toLowerCase()
                     .replace(/[^\w\s-]/g, '').replace(/\s+/g, '-');
                 if (idCounts[slug] !== undefined) {
                     idCounts[slug]++;
-                    slug += '-' + idCounts[slug];
+                    slug += `-${idCounts[slug]}`;
                 } else {
                     idCounts[slug] = 0;
                 }
@@ -133,16 +151,98 @@
     }
 
     function scrollToHeading(id) {
-        var el = document.getElementById(id);
+        const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function setFullWidth(enabled) {
-        var content = document.getElementById('content');
+        const content = document.getElementById('content');
         if (enabled) {
             content.style.maxWidth = 'none';
             content.style.margin = '0';
         }
+    }
+
+    // --- Find in page ---
+
+    let findMatches = [];
+    let findIndex = -1;
+
+    function findInPage(query) {
+        clearFind();
+        if (!query) return JSON.stringify({ total: 0, current: 0 });
+
+        const content = document.getElementById('content');
+        const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+        const textNodes = [];
+        while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+        const lowerQuery = query.toLowerCase();
+
+        for (const node of textNodes) {
+            const parent = node.parentNode;
+            if (parent.closest('mark.find-highlight')) continue;
+
+            const text = node.textContent;
+            const lower = text.toLowerCase();
+            const parts = [];
+            let lastIdx = 0;
+            let idx;
+
+            while ((idx = lower.indexOf(lowerQuery, lastIdx)) !== -1) {
+                if (idx > lastIdx) parts.push(document.createTextNode(text.slice(lastIdx, idx)));
+                const mark = document.createElement('mark');
+                mark.className = 'find-highlight';
+                mark.textContent = text.slice(idx, idx + query.length);
+                parts.push(mark);
+                findMatches.push(mark);
+                lastIdx = idx + query.length;
+            }
+
+            if (parts.length > 0) {
+                if (lastIdx < text.length) parts.push(document.createTextNode(text.slice(lastIdx)));
+                const fragment = document.createDocumentFragment();
+                for (const p of parts) fragment.appendChild(p);
+                parent.replaceChild(fragment, node);
+            }
+        }
+
+        if (findMatches.length > 0) {
+            findIndex = 0;
+            findMatches[0].classList.add('find-current');
+            findMatches[0].scrollIntoView({ block: 'center' });
+        }
+        return JSON.stringify({ total: findMatches.length, current: findMatches.length > 0 ? 1 : 0 });
+    }
+
+    function findNext() {
+        if (!findMatches.length) return JSON.stringify({ total: 0, current: 0 });
+        findMatches[findIndex].classList.remove('find-current');
+        findIndex = (findIndex + 1) % findMatches.length;
+        findMatches[findIndex].classList.add('find-current');
+        findMatches[findIndex].scrollIntoView({ block: 'center' });
+        return JSON.stringify({ total: findMatches.length, current: findIndex + 1 });
+    }
+
+    function findPrevious() {
+        if (!findMatches.length) return JSON.stringify({ total: 0, current: 0 });
+        findMatches[findIndex].classList.remove('find-current');
+        findIndex = (findIndex - 1 + findMatches.length) % findMatches.length;
+        findMatches[findIndex].classList.add('find-current');
+        findMatches[findIndex].scrollIntoView({ block: 'center' });
+        return JSON.stringify({ total: findMatches.length, current: findIndex + 1 });
+    }
+
+    function clearFind() {
+        for (const mark of findMatches) {
+            const parent = mark.parentNode;
+            if (parent) {
+                parent.replaceChild(document.createTextNode(mark.textContent), mark);
+                parent.normalize();
+            }
+        }
+        findMatches = [];
+        findIndex = -1;
     }
 </script>
 </body>

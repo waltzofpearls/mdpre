@@ -14,6 +14,7 @@ class FolderViewModel {
     var files: [URL] = []
     var selectedFile: URL?
     var selectedFileContent: String = ""
+    var showFindBar = false
 
     @ObservationIgnored weak var window: NSWindow?
     private var eventStream: FSEventStreamRef?

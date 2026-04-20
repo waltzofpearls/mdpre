@@ -15,7 +15,6 @@ struct MarkdownWebView: NSViewRepresentable {
     var exportHandler: ExportHandler?
     var fullWidth: Bool = false
     var onNavigateToFile: ((URL) -> Void)?
-    var onWebViewCreated: ((WKWebView) -> Void)?
 
     func makeNSView(context: Context) -> WKWebView {
         let config = WKWebViewConfiguration()
@@ -30,7 +29,6 @@ struct MarkdownWebView: NSViewRepresentable {
             webView.loadFileURL(templateURL, allowingReadAccessTo: templateURL.deletingLastPathComponent())
         }
 
-        onWebViewCreated?(webView)
         return webView
     }
 

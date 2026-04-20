@@ -35,6 +35,7 @@ struct MDPreApp: App {
                 }
             }
             ExportCommands()
+            FindCommands()
         }
     }
 }

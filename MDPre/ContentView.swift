@@ -16,9 +16,14 @@ struct ContentView: View {
     @State private var hasCheckedAccess = false
     @State private var displayText = ""
     @State private var fileWatcher: FileWatcher?
+    @State private var showFindBar = false
 
     var body: some View {
-        MarkdownWebView(
+        VStack(spacing: 0) {
+            if showFindBar {
+                FindBar(isVisible: $showFindBar)
+            }
+            MarkdownWebView(
             markdown: displayText,
             sourceFileURL: fileURL,
             exportHandler: exportHandler,
@@ -53,6 +58,10 @@ struct ContentView: View {
                     TableOfContentsToolbarButton()
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleFindBar)) { _ in
+            showFindBar.toggle()
+        }
     }
 
     private func checkFolderAccessIfNeeded() {

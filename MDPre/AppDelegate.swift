@@ -81,12 +81,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let width = min(max(visibleFrame.width * 0.8, 900), 1600)
         let height = min(max(visibleFrame.height * 0.8, 600), 1100)
 
-        let window = NSWindow(
+        let window = FolderWindow(
             contentRect: NSRect(x: 0, y: 0, width: width, height: height),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
+        window.onFind = { viewModel.showFindBar.toggle() }
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 700, height: 500)
         window.toolbarStyle = .unified
