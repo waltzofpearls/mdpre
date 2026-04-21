@@ -15,6 +15,7 @@ class FolderViewModel {
     var selectedFile: URL?
     var selectedFileContent: String = ""
     var showFindBar = false
+    var viewMode: ViewMode = .preview
 
     @ObservationIgnored weak var window: NSWindow?
     private var eventStream: FSEventStreamRef?
