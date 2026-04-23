@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showFindBar = false
     @State private var viewMode: ViewMode = .preview
     @State private var scrollPercent: Double = 0
+    @State private var stats: DocumentStats = .empty
 
     var body: some View {
         VStack(spacing: 0) {
@@ -57,6 +58,7 @@ struct ContentView: View {
                         .frame(minWidth: 200)
                 }
             }
+            StatusBarView(stats: stats)
         }
         .frame(minWidth: 700, idealWidth: 980, minHeight: 500, idealHeight: 700)
         .onAppear {
@@ -64,6 +66,7 @@ struct ContentView: View {
             exportHandler = ExportHandler(markdown: displayText)
             checkFolderAccessIfNeeded()
             startFileWatcher()
+            stats = DocumentStats.compute(from: displayText)
         }
         .onDisappear {
             fileWatcher?.stopWatching()
@@ -75,6 +78,7 @@ struct ContentView: View {
         .onChange(of: displayText) { _, newValue in
             exportHandler?.markdown = newValue
             checkFolderAccessIfNeeded()
+            stats = DocumentStats.compute(from: newValue)
         }
         .focusedSceneValue(\.exportHandler, exportHandler)
         .toolbar {
