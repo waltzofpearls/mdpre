@@ -12,6 +12,7 @@ struct FolderContentView: View {
     @Bindable var viewModel: FolderViewModel
     @State private var exportHandler: ExportHandler?
     @State private var scrollPercent: Double = 0
+    @State private var stats: DocumentStats = .empty
 
     var body: some View {
         VStack(spacing: 0) {
@@ -59,13 +60,16 @@ struct FolderContentView: View {
                     )
                 }
             }
+            StatusBarView(stats: stats)
         }
         .onAppear {
             exportHandler = ExportHandler(markdown: viewModel.selectedFileContent)
             viewModel.updateWindowTitle()
+            stats = DocumentStats.compute(from: viewModel.selectedFileContent)
         }
         .onChange(of: viewModel.selectedFileContent) { _, newValue in
             exportHandler?.markdown = newValue
+            stats = DocumentStats.compute(from: newValue)
         }
         .onChange(of: viewModel.selectedFile) { _, _ in
             viewModel.updateWindowTitle()
