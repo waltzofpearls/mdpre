@@ -7,8 +7,12 @@
 A macOS markdown preview app built for developers, with AI cost estimation, side-by-side source view, and live reload.
 
 <p>
-  <img src="docs/light.png" alt="Light mode" width="49%">
-  <img src="docs/dark.png" alt="Dark mode" width="49%">
+  <img src="docs/single-file-mode-preview-light.png" alt="Light mode" width="49%">
+  <img src="docs/single-file-mode-preview-dark.png" alt="Dark mode" width="49%">
+  <img src="docs/single-file-mode-split-light.png" alt="Light mode" width="49%">
+  <img src="docs/single-file-mode-split-dark.png" alt="Dark mode" width="49%">
+  <img src="docs/folder-mode-light.png" alt="Light mode" width="49%">
+  <img src="docs/folder-mode-dark.png" alt="Dark mode" width="49%">
 </p>
 
 ## Features
