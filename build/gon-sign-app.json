@@ -1,6 +1,5 @@
 {
   "source": [
-    "./build/bin/Markdown Preview.app/Contents/MacOS/mdp",
     "./build/bin/Markdown Preview.app/Contents/MacOS/Markdown Preview"
   ],
   "bundle_id": "dev.rollie.mdpre",

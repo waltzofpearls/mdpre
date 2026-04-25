@@ -1,0 +1,13 @@
+{
+  "source": [
+    "./build/bin/Markdown Preview.app/Contents/MacOS/mdp"
+  ],
+  "bundle_id": "dev.rollie.mdpre",
+  "apple_id": {
+    "username": "rollie.ma@gmail.com",
+    "provider": "L2AR6TDY65"
+  },
+  "sign": {
+    "application_identity": "Developer ID Application: Ruo-Lei Ma (L2AR6TDY65)"
+  }
+}
