@@ -29,6 +29,17 @@ struct MDPreApp: App {
         }
         .defaultSize(width: 980, height: 760)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About Markdown Preview") {
+                    var gregorianCalendar = Calendar(identifier: .gregorian)
+                    gregorianCalendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+                    let year = gregorianCalendar.component(.year, from: Date())
+                    NSApplication.shared.orderFrontStandardAboutPanel(options: [
+                        NSApplication.AboutPanelOptionKey(rawValue: "Copyright"):
+                            "Copyright \(year) Rollie Ma (Ruo-Lei Ma) rollie@rollie.dev",
+                    ])
+                }
+            }
             CommandGroup(after: .newItem) {
                 Button("Open Folder...") {
                     appDelegate.openFolderPanel()
