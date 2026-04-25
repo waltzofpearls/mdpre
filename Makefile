@@ -43,7 +43,8 @@ app:
 .PHONY: sign
 sign:
 	@if [[ "$(APPLE_PASSWORD)" != "" ]]; then \
-		AC_PASSWORD=$(APPLE_PASSWORD) gon -log-level=info ./build/gon-sign.json ; \
+		AC_PASSWORD=$(APPLE_PASSWORD) gon -log-level=info ./build/gon-sign-cli.json ; \
+		AC_PASSWORD=$(APPLE_PASSWORD) gon -log-level=info ./build/gon-sign-app.json ; \
 	fi
 
 .PHONY: dmg
