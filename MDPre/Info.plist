@@ -17,6 +17,14 @@
 			<string>Default</string>
 		</dict>
 	</array>
+	<key>SUFeedURL</key>
+	<string>https://waltzofpearls.github.io/mdpre/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>ME7OB0nMzJNMZslrecWxYbX9kTVUIWX48XrsWkEfVho=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
 	<key>CFBundleName</key>
 	<string>Markdown Preview</string>
 	<key>CFBundleDisplayName</key>
