@@ -17,11 +17,15 @@
 //  limitations under the License.
 //
 
+import Sparkle
 import SwiftUI
 
 @main
 struct MDPreApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil
+    )
 
     var body: some Scene {
         DocumentGroup(viewing: MDPreDocument.self) { file in
@@ -38,6 +42,11 @@ struct MDPreApp: App {
                         NSApplication.AboutPanelOptionKey(rawValue: "Copyright"):
                             "Copyright \(year) Rollie Ma (Ruo-Lei Ma) rollie@rollie.dev",
                     ])
+                }
+            }
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates...") {
+                    updaterController.checkForUpdates(nil)
                 }
             }
             CommandGroup(after: .newItem) {
