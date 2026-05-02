@@ -32,12 +32,24 @@ jobs:
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         run: make build
+      - name: Sign DMG with Sparkle and generate appcast
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_EDDSA_KEY }}
+        run: |
+          SPARKLE_BIN=$(find SourcePackages -name "generate_appcast" -type f 2>/dev/null | head -1)
+          if [ -z "$SPARKLE_BIN" ]; then
+            SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData -name "generate_appcast" -type f 2>/dev/null | head -1)
+          fi
+          mkdir -p build/appcast
+          cp build/bin/Markdown-Preview.dmg build/appcast/
+          "$SPARKLE_BIN" build/appcast/
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg
+          name: macos-release
           path: |
             build/bin/Markdown-Preview.dmg
+            build/appcast/appcast.xml
           retention-days: 5
 
   release:
@@ -53,9 +65,19 @@ jobs:
       - name: List files
         run: |
           ls -ahl --color
-          find . -name "*.dmg"
+          find . -name "*.dmg" -o -name "appcast.xml"
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: macos-dmg/Markdown-Preview.dmg
+          files: macos-release/build/bin/Markdown-Preview.dmg
           generate_release_notes: true
+      - name: Deploy appcast to GitHub Pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git checkout gh-pages
+          cp macos-release/build/appcast/appcast.xml .
+          git add appcast.xml
+          git commit -m "Update appcast for $(git describe --tags --abbrev=0 origin/main 2>/dev/null || echo 'latest')" || echo "No changes to commit"
+          git push origin gh-pages
