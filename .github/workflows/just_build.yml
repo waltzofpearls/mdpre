@@ -9,6 +9,8 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: List available Xcode versions
         run: ls /Applications | grep Xcode
       - name: Set up Xcode
@@ -28,10 +30,20 @@ jobs:
         env:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
         run: make build
+      - name: Sign DMG with Sparkle and generate appcast
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_EDDSA_KEY }}
+        run: |
+          SPARKLE_BIN=$(find . ~/Library/Developer/Xcode/DerivedData -name "generate_appcast" -type f 2>/dev/null | head -1)
+          echo "Found generate_appcast at: $SPARKLE_BIN"
+          mkdir -p build/appcast
+          cp build/bin/Markdown-Preview.dmg build/appcast/
+          echo "$SPARKLE_KEY" | "$SPARKLE_BIN" --ed-key-file - build/appcast/
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg
+          name: macos-release
           path: |
             build/bin/Markdown-Preview.dmg
+            build/appcast/appcast.xml
           retention-days: 5

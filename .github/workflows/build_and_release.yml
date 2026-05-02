@@ -36,13 +36,11 @@ jobs:
         env:
           SPARKLE_KEY: ${{ secrets.SPARKLE_EDDSA_KEY }}
         run: |
-          SPARKLE_BIN=$(find SourcePackages -name "generate_appcast" -type f 2>/dev/null | head -1)
-          if [ -z "$SPARKLE_BIN" ]; then
-            SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData -name "generate_appcast" -type f 2>/dev/null | head -1)
-          fi
+          SPARKLE_BIN=$(find . ~/Library/Developer/Xcode/DerivedData -name "generate_appcast" -type f 2>/dev/null | head -1)
+          echo "Found generate_appcast at: $SPARKLE_BIN"
           mkdir -p build/appcast
           cp build/bin/Markdown-Preview.dmg build/appcast/
-          "$SPARKLE_BIN" build/appcast/
+          echo "$SPARKLE_KEY" | "$SPARKLE_BIN" --ed-key-file - build/appcast/
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
