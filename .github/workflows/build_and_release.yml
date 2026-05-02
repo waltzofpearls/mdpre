@@ -10,7 +10,7 @@ jobs:
     name: Build
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: List available Xcode versions
@@ -22,7 +22,7 @@ jobs:
       - name: Show current version of Xcode
         run: xcodebuild -version
       - name: Import macOS app signing certificate
-        uses: Apple-Actions/import-codesign-certs@v2
+        uses: Apple-Actions/import-codesign-certs@v6
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATES_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATES_PASSWORD }}
@@ -43,7 +43,7 @@ jobs:
           echo "$SPARKLE_KEY" | "$SPARKLE_BIN" --ed-key-file - build/appcast/
           cp build/appcast/appcast.xml build/bin/
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: macos-release
           path: build/bin/
@@ -56,15 +56,15 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
       - name: List files
         run: |
           ls -ahl --color
           find . -name "*.dmg" -o -name "appcast.xml"
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: macos-release/Markdown-Preview.dmg
           generate_release_notes: true
