@@ -43,6 +43,7 @@ app:
 .PHONY: sign
 sign:
 	@if [[ "$(APPLE_PASSWORD)" != "" ]]; then \
+		./build/sign-sparkle.sh "$(BIN)/$(APP_NAME).app" ; \
 		AC_PASSWORD=$(APPLE_PASSWORD) gon -log-level=info ./build/gon-sign-cli.json ; \
 		AC_PASSWORD=$(APPLE_PASSWORD) gon -log-level=info ./build/gon-sign-app.json ; \
 	fi
