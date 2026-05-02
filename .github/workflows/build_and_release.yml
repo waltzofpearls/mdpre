@@ -67,7 +67,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: macos-release/build/bin/Markdown-Preview.dmg
+          files: macos-release/Markdown-Preview.dmg
           generate_release_notes: true
       - name: Deploy appcast to GitHub Pages
         run: |
@@ -75,7 +75,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin gh-pages
           git checkout gh-pages
-          cp macos-release/build/appcast/appcast.xml .
+          cp macos-release/appcast.xml .
           git add appcast.xml
           git commit -m "Update appcast for $(git describe --tags --abbrev=0 origin/main 2>/dev/null || echo 'latest')" || echo "No changes to commit"
           git push origin gh-pages
