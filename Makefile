@@ -59,8 +59,8 @@ dmg:
 		--window-pos 210 120 \
 		--window-size 665 525 \
 		--icon-size 100 \
-		--icon "$(APP_NAME).app" 160 355 \
-		--app-drop-link 490 355 \
+		--icon "$(APP_NAME).app" 160 310 \
+		--app-drop-link 490 310 \
 		--hide-extension "$(APP_NAME).app" \
 		--no-internet-enable \
 		"$(BIN)/Markdown-Preview.dmg" \
