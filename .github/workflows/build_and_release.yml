@@ -38,9 +38,13 @@ jobs:
         run: |
           SPARKLE_BIN=$(find . ~/Library/Developer/Xcode/DerivedData -name "generate_appcast" -type f 2>/dev/null | head -1)
           echo "Found generate_appcast at: $SPARKLE_BIN"
+          VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
+          TAG=$(git describe --tags --abbrev=0)
+          DOWNLOAD_URL="https://github.com/waltzofpearls/mdpre/releases/download/${TAG}/"
+          echo "Download URL prefix: $DOWNLOAD_URL"
           mkdir -p build/appcast
           cp build/bin/Markdown-Preview.dmg build/appcast/
-          echo "$SPARKLE_KEY" | "$SPARKLE_BIN" --ed-key-file - build/appcast/
+          echo "$SPARKLE_KEY" | "$SPARKLE_BIN" --ed-key-file - --download-url-prefix "$DOWNLOAD_URL" build/appcast/
           cp build/appcast/appcast.xml build/bin/
       - name: Upload artifacts
         uses: actions/upload-artifact@v5
