@@ -47,7 +47,7 @@ jobs:
           echo "$SPARKLE_KEY" | "$SPARKLE_BIN" --ed-key-file - --download-url-prefix "$DOWNLOAD_URL" build/appcast/
           cp build/appcast/appcast.xml build/bin/
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: macos-release
           path: build/bin/
@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Download all artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: macos-release
           path: /tmp/macos-release
