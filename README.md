@@ -6,31 +6,44 @@
 
 A macOS markdown preview app built for developers, with AI cost estimation, side-by-side source view, and live reload.
 
+**Single-file preview**
+
 <p>
-  <img src="docs/single-file-mode-preview-light.png" alt="Light mode" width="49%">
-  <img src="docs/single-file-mode-preview-dark.png" alt="Dark mode" width="49%">
-  <img src="docs/single-file-mode-split-light.png" alt="Light mode" width="49%">
-  <img src="docs/single-file-mode-split-dark.png" alt="Dark mode" width="49%">
-  <img src="docs/folder-mode-light.png" alt="Light mode" width="49%">
-  <img src="docs/folder-mode-dark.png" alt="Dark mode" width="49%">
+  <img src="docs/single-file-mode-preview-light.png" alt="Single file preview in light mode" width="49%">
+  <img src="docs/single-file-mode-preview-dark.png" alt="Single file preview in dark mode" width="49%">
+</p>
+
+**Side-by-side source and preview**
+
+<p>
+  <img src="docs/single-file-mode-split-light.png" alt="Split view in light mode" width="49%">
+  <img src="docs/single-file-mode-split-dark.png" alt="Split view in dark mode" width="49%">
+</p>
+
+**Folder mode with sidebar**
+
+<p>
+  <img src="docs/folder-mode-light.png" alt="Folder mode in light mode" width="49%">
+  <img src="docs/folder-mode-dark.png" alt="Folder mode in dark mode" width="49%">
 </p>
 
 ## Features
 
-- **GitHub Flavored Markdown** — rendered with [marked](https://github.com/markedjs/marked) and [github-markdown-css](https://github.com/sindresorhus/github-markdown-css), with syntax highlighting via [highlight.js](https://highlightjs.org/)
-- **Document stats** — word count, character count, token count, and estimated AI processing cost
-- **Side-by-side view** — source and preview with synchronized scrolling
-- **Source view** — syntax-highlighted raw markdown source
-- **Live reload** — automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
-- **Find in document** — search with live highlighting and match navigation (Cmd+F)
-- **Table of contents** — jump to any section from the toolbar dropdown
-- **Folder mode** — browse a directory of Markdown files with a sidebar, similar to Preview.app
-- **Export** — save as PDF (Cmd+E), HTML (Cmd+Shift+E), or print (Cmd+P)
-- **Internal link navigation** — click relative links between Markdown documents
-- **Relative image loading** — images referenced with relative paths render correctly
-- **Pinch-to-zoom** — scale content with trackpad gestures
-- **Dark mode** — follows system appearance
-- **CLI tool** — open files and folders from the terminal with `mdp`
+- **GitHub Flavored Markdown** rendered with [marked](https://github.com/markedjs/marked) and [github-markdown-css](https://github.com/sindresorhus/github-markdown-css), with syntax highlighting via [highlight.js](https://highlightjs.org/)
+- **Document stats** showing word count, character count, token count, and estimated AI processing cost
+- **Side-by-side view** with source and preview, synchronized scrolling
+- **Source view** with syntax-highlighted raw markdown
+- **Live reload** that automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
+- **Find in document** with live highlighting and match navigation (Cmd+F)
+- **Table of contents** to jump to any section from the toolbar dropdown
+- **Folder mode** to browse a directory of Markdown files with a sidebar, similar to Preview.app
+- **Export** as PDF (Cmd+E), HTML (Cmd+Shift+E), or print (Cmd+P)
+- **Internal link navigation** between Markdown documents via relative links
+- **Relative image loading** for images referenced with relative paths
+- **Pinch-to-zoom** to scale content with trackpad gestures
+- **Auto-update** via Sparkle for automatic update checking and installation
+- **Dark mode** following system appearance
+- **CLI tool** to open files and folders from the terminal with `mdp`
 
 ## AI Cost Estimation
 
@@ -47,6 +60,12 @@ Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No n
 | Cmd+Shift+E | Export as HTML |
 | Cmd+P | Print |
 | Cmd+Shift+O | Open folder |
+
+## Install
+
+Download the latest DMG from [GitHub Releases](https://github.com/waltzofpearls/mdpre/releases), open it, and drag Markdown Preview to your Applications folder.
+
+The app checks for updates automatically via Sparkle. You can also check manually from **Markdown Preview > Check for Updates...**
 
 ## Requirements
 
@@ -71,11 +90,11 @@ To build a signed and notarized DMG for distribution:
 APPLE_PASSWORD=your-app-specific-password make build
 ```
 
-This runs: xcodebuild → gon sign → create-dmg → gon notarize. See the [Makefile](Makefile) for details.
+This runs: xcodebuild, gon sign, create-dmg, gon notarize. See the [Makefile](Makefile) for details.
 
 ## CLI Tool
 
-MDPre bundles a command-line tool called `mdp`.
+Markdown Preview bundles a command-line tool called `mdp`.
 
 ### Usage
 
