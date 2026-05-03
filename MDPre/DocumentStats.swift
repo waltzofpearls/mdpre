@@ -66,5 +66,5 @@ enum ModelPricing {
         ModelPrice(name: "Claude Haiku 4.5", inputPricePerMTok: 1.00, footnote: nil),
     ]
 
-    static let pricingDate = "April 2026"
+    static let pricingDate = "May 2026"
 }
