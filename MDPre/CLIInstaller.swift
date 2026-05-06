@@ -44,6 +44,14 @@ enum CLIInstaller {
             return
         }
 
+        #if APP_STORE
+        // App Store: show the command for user to run manually
+        showFallback(
+            title: "Install Command Line Tool",
+            message: "To install the 'mdp' command, copy and run this in Terminal.\n\nThis requires administrator privileges because /usr/local/bin is a system directory.",
+            command: "sudo ln -sf '\(source.path)' '\(installPath)'"
+        )
+        #else
         // 1. Try Apple's privileged file operations API (sandbox-friendly, requires entitlement)
         if installViaWorkspaceAuthorization(source: source) { return }
 
@@ -65,11 +73,19 @@ enum CLIInstaller {
             message: "To install the 'mdp' command, copy and run this in Terminal.\n\nThis requires administrator privileges because /usr/local/bin is a system directory.",
             command: "sudo ln -sf '\(source.path)' '\(installPath)'"
         )
+        #endif
     }
 
     // MARK: - Uninstall
 
     static func uninstall() {
+        #if APP_STORE
+        showFallback(
+            title: "Uninstall Command Line Tool",
+            message: "To remove the 'mdp' command, copy and run this in Terminal.",
+            command: "sudo rm -f '\(installPath)'"
+        )
+        #else
         // 1. Try Apple's privileged file operations API
         if uninstallViaWorkspaceAuthorization() { return }
 
@@ -94,6 +110,7 @@ enum CLIInstaller {
             message: "To remove the 'mdp' command, copy and run this in Terminal.",
             command: "sudo rm -f '\(installPath)'"
         )
+        #endif
     }
 
     // MARK: - Approach 1: NSWorkspace authorization (sandbox-friendly)

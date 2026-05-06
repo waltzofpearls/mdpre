@@ -85,8 +85,22 @@ sign-verify: ## Verify code signature
 clean: ## Remove build artifacts
 	rm -rf $(BIN) $(TMP)
 
-.PHONY: release-store
-release-store: ## App Store release (not yet implemented)
-	@echo "App Store release not yet implemented."
-	@echo "Requires: Apple Distribution certificate, Transporter or xcrun altool."
-	@exit 1
+APPSTORE_SCHEME := MDPre-AppStore
+APPSTORE_ARCHIVE := $(BUILD)/MDPre-AppStore.xcarchive
+APPSTORE_EXPORT_OPTIONS := $(BUILD)/ExportOptions-AppStore.plist
+
+.PHONY: release-appstore
+release-appstore: ## Archive and upload to App Store Connect
+	-rm -rf $(APPSTORE_ARCHIVE)
+	xcodebuild -project ./$(APP).xcodeproj/ \
+		-scheme $(APPSTORE_SCHEME) \
+		-configuration Release-AppStore \
+		MARKETING_VERSION="$(MARKETING_VERSION)" \
+		CURRENT_PROJECT_VERSION="$(BUILD_VERSION)" \
+		-allowProvisioningUpdates \
+		archive \
+		-archivePath $(APPSTORE_ARCHIVE)
+	xcodebuild -exportArchive \
+		-archivePath $(APPSTORE_ARCHIVE) \
+		-exportOptionsPlist $(APPSTORE_EXPORT_OPTIONS) \
+		-allowProvisioningUpdates

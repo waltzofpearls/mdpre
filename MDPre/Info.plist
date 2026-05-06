@@ -25,6 +25,10 @@
 	<true/>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
 	<key>CFBundleName</key>
 	<string>Markdown Preview</string>
 	<key>CFBundleDisplayName</key>

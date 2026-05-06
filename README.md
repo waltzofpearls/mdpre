@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/icon.png" alt="MDPre" width="128">
+  <img src="docs/icon.png" alt="MDPre: Markdown Preview" width="128">
 </p>
 
-# MDPre
+# MDPre: Markdown Preview
 
 A macOS markdown preview app built for developers, with AI cost estimation, side-by-side source view, and live reload.
 
