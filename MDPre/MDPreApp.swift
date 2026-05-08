@@ -17,15 +17,19 @@
 //  limitations under the License.
 //
 
+#if !APP_STORE
 import Sparkle
+#endif
 import SwiftUI
 
 @main
 struct MDPreApp: App {
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
+    #if !APP_STORE
     private let updaterController = SPUStandardUpdaterController(
         startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil
     )
+    #endif
 
     var body: some Scene {
         DocumentGroup(viewing: MDPreDocument.self) { file in
@@ -39,16 +43,19 @@ struct MDPreApp: App {
                     gregorianCalendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
                     let year = gregorianCalendar.component(.year, from: Date())
                     NSApplication.shared.orderFrontStandardAboutPanel(options: [
+                        .applicationName: "MDPre: Markdown Preview",
                         NSApplication.AboutPanelOptionKey(rawValue: "Copyright"):
                             "Copyright \(year) Rollie Ma (Ruo-Lei Ma) rollie@rollie.dev",
                     ])
                 }
             }
+            #if !APP_STORE
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates...") {
                     updaterController.checkForUpdates(nil)
                 }
             }
+            #endif
             CommandGroup(after: .newItem) {
                 Button("Open Folder...") {
                     appDelegate.openFolderPanel()
