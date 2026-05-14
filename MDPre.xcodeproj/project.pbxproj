@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E313BB352FB547C600434103 /* Sparkle.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E313BB322FB5472800434103 /* Sparkle.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E39075D82F83639700D1A22F /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = E39075D72F83639700D1A22F /* AppIcon.icon */; };
 		E39F9F042F70B93E00CB86A4 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E39F9F032F70B93E00CB86A4 /* WebKit.framework */; };
 		E39F9F6D2F7109C600CB86A4 /* mdp in Embed CLI Tool */ = {isa = PBXBuildFile; fileRef = E39F9F652F71094200CB86A4 /* mdp */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		E3A2B9992FA3295D00816F4E /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = E3A2B9982FA3295D00816F4E /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,6 +38,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		E313BB342FB5479500434103 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E313BB352FB547C600434103 /* Sparkle.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E39F9F632F71094200CB86A4 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -61,6 +72,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E313BB322FB5472800434103 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Frameworks/Sparkle.framework; sourceTree = "<group>"; };
 		E39075D72F83639700D1A22F /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		E39F9EC42F70B75D00CB86A4 /* Markdown Preview.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Markdown Preview.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E39F9ED42F70B75E00CB86A4 /* MDPreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MDPreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -111,7 +123,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E39F9F042F70B93E00CB86A4 /* WebKit.framework in Frameworks */,
-				E3A2B9992FA3295D00816F4E /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -167,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				E39F9F032F70B93E00CB86A4 /* WebKit.framework */,
+				E313BB322FB5472800434103 /* Sparkle.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -183,6 +195,7 @@
 				E39F9EC22F70B75D00CB86A4 /* Resources */,
 				E39F9F6C2F71097700CB86A4 /* Embed CLI Tool */,
 				E31905802FABA8B00033D19C /* Strip Sparkle for App Store */,
+				E313BB342FB5479500434103 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -194,7 +207,6 @@
 			);
 			name = MDPre;
 			packageProductDependencies = (
-				E3A2B9982FA3295D00816F4E /* Sparkle */,
 			);
 			productName = MDPre;
 			productReference = E39F9EC42F70B75D00CB86A4 /* Markdown Preview.app */;
@@ -304,7 +316,6 @@
 			mainGroup = E39F9EBB2F70B75D00CB86A4;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				E3A2B9972FA3295D00816F4E /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = E39F9EC52F70B75D00CB86A4 /* Products */;
@@ -489,6 +500,10 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MDPre/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -578,6 +593,10 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MDPre/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -586,6 +605,10 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Sparkle,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.rollie.mdpre;
 				PRODUCT_NAME = "Markdown Preview";
 				REGISTER_APP_GROUPS = YES;
@@ -614,6 +637,10 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MDPre/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -622,6 +649,10 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Sparkle,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = dev.rollie.mdpre;
 				PRODUCT_NAME = "Markdown Preview";
 				REGISTER_APP_GROUPS = YES;
@@ -908,25 +939,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		E3A2B9972FA3295D00816F4E /* XCRemoteSwiftPackageReference "Sparkle" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/sparkle-project/Sparkle";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.9.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		E3A2B9982FA3295D00816F4E /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E3A2B9972FA3295D00816F4E /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E39F9EBC2F70B75D00CB86A4 /* Project object */;
 }
