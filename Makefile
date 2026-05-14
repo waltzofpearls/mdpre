@@ -100,6 +100,7 @@ release-appstore: ## Archive and upload to App Store Connect
 		-allowProvisioningUpdates \
 		archive \
 		-archivePath $(APPSTORE_ARCHIVE)
+	rm -rf "$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app/Contents/Frameworks/Sparkle.framework"
 	xcodebuild -exportArchive \
 		-archivePath $(APPSTORE_ARCHIVE) \
 		-exportOptionsPlist $(APPSTORE_EXPORT_OPTIONS) \

@@ -36,8 +36,7 @@ jobs:
         env:
           SPARKLE_KEY: ${{ secrets.SPARKLE_EDDSA_KEY }}
         run: |
-          SPARKLE_BIN=$(find . ~/Library/Developer/Xcode/DerivedData -name "generate_appcast" -type f 2>/dev/null | head -1)
-          echo "Found generate_appcast at: $SPARKLE_BIN"
+          SPARKLE_BIN="./Frameworks/sparkle-bin/generate_appcast"
           VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
           TAG=$(git describe --tags --abbrev=0)
           DOWNLOAD_URL="https://github.com/waltzofpearls/mdpre/releases/download/${TAG}/"
