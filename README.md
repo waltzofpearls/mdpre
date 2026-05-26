@@ -63,9 +63,9 @@ Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No n
 
 ## Install
 
-Download the latest DMG from [GitHub Releases](https://github.com/waltzofpearls/mdpre/releases), open it, and drag Markdown Preview to your Applications folder.
+**Mac App Store:** [MDPre: Markdown Preview](https://apps.apple.com/app/id6766780905)
 
-The app checks for updates automatically via Sparkle. You can also check manually from **Markdown Preview > Check for Updates...**
+**Direct download:** Download the latest DMG from [GitHub Releases](https://github.com/waltzofpearls/mdpre/releases), open it, and drag Markdown Preview to your Applications folder. The direct download version checks for updates automatically via Sparkle.
 
 ## Requirements
 

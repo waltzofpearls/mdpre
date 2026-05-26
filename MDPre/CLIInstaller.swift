@@ -44,76 +44,26 @@ enum CLIInstaller {
             return
         }
 
-        #if APP_STORE
-        // App Store: show the command for user to run manually
-        showFallback(
-            title: "Install Command Line Tool",
-            message: "To install the 'mdp' command, copy and run this in Terminal.\n\nThis requires administrator privileges because /usr/local/bin is a system directory.",
-            command: "sudo ln -sf '\(source.path)' '\(installPath)'"
-        )
-        #else
-        // 1. Try Apple's privileged file operations API (sandbox-friendly, requires entitlement)
         if installViaWorkspaceAuthorization(source: source) { return }
 
-        // 2. Try osascript with admin privileges (works for non-sandboxed DMG distribution)
-        let shellCommand = "mkdir -p /usr/local/bin && ln -sf '\(source.path)' '\(installPath)'"
-        switch runWithAdminPrivileges(shellCommand) {
-        case .success:
-            showSuccessAlert()
-            return
-        case .cancelled:
-            return
-        case .failed:
-            break
-        }
-
-        // 3. Fallback: copy command for user to run in Terminal
         showFallback(
             title: "Install Command Line Tool",
             message: "To install the 'mdp' command, copy and run this in Terminal.\n\nThis requires administrator privileges because /usr/local/bin is a system directory.",
             command: "sudo ln -sf '\(source.path)' '\(installPath)'"
         )
-        #endif
     }
 
     // MARK: - Uninstall
 
     static func uninstall() {
-        #if APP_STORE
         showFallback(
             title: "Uninstall Command Line Tool",
             message: "To remove the 'mdp' command, copy and run this in Terminal.",
             command: "sudo rm -f '\(installPath)'"
         )
-        #else
-        // 1. Try Apple's privileged file operations API
-        if uninstallViaWorkspaceAuthorization() { return }
-
-        // 2. Try osascript
-        switch runWithAdminPrivileges("rm -f '\(installPath)'") {
-        case .success:
-            showAlert(
-                title: "Command Line Tool Removed",
-                message: "The 'mdp' command has been removed from /usr/local/bin.",
-                style: .informational
-            )
-            return
-        case .cancelled:
-            return
-        case .failed:
-            break
-        }
-
-        // 3. Fallback
-        showFallback(
-            title: "Uninstall Command Line Tool",
-            message: "To remove the 'mdp' command, copy and run this in Terminal.",
-            command: "sudo rm -f '\(installPath)'"
-        )
-        #endif
     }
 
-    // MARK: - Approach 1: NSWorkspace authorization (sandbox-friendly)
+    // MARK: - NSWorkspace authorization (requires privileged-file-operations entitlement)
 
     private static func installViaWorkspaceAuthorization(source: URL) -> Bool {
         let semaphore = DispatchSemaphore(value: 0)
@@ -125,19 +75,15 @@ enum CLIInstaller {
 
             let fm = FileManager(authorization: auth)
             do {
-                // Ensure /usr/local/bin exists
                 if !FileManager.default.fileExists(atPath: installDirURL.path) {
                     try fm.createDirectory(at: installDirURL, withIntermediateDirectories: true)
                 }
-                // Remove existing symlink if present
                 if FileManager.default.fileExists(atPath: installPath) {
                     try fm.removeItem(at: installURL)
                 }
                 try fm.createSymbolicLink(at: installURL, withDestinationURL: source)
                 succeeded = true
-            } catch {
-                // Fall through to next approach
-            }
+            } catch {}
         }
 
         semaphore.wait()
@@ -148,76 +94,7 @@ enum CLIInstaller {
         return succeeded
     }
 
-    private static func uninstallViaWorkspaceAuthorization() -> Bool {
-        guard FileManager.default.fileExists(atPath: installPath) else { return false }
-
-        let semaphore = DispatchSemaphore(value: 0)
-        var succeeded = false
-
-        NSWorkspace.shared.requestAuthorization(to: .createSymbolicLink) { auth, error in
-            defer { semaphore.signal() }
-            guard let auth else { return }
-
-            let fm = FileManager(authorization: auth)
-            do {
-                try fm.removeItem(at: installURL)
-                succeeded = true
-            } catch {
-                // Fall through to next approach
-            }
-        }
-
-        semaphore.wait()
-
-        if succeeded {
-            showAlert(
-                title: "Command Line Tool Removed",
-                message: "The 'mdp' command has been removed from /usr/local/bin.",
-                style: .informational
-            )
-        }
-        return succeeded
-    }
-
-    // MARK: - Approach 2: osascript with admin privileges
-
-    private enum AdminResult {
-        case success, cancelled, failed
-    }
-
-    private static func runWithAdminPrivileges(_ command: String) -> AdminResult {
-        let script = "do shell script \"\(command)\" with administrator privileges"
-
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", script]
-
-        let errorPipe = Pipe()
-        process.standardError = errorPipe
-        process.standardOutput = FileHandle.nullDevice
-
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            return .failed
-        }
-
-        if process.terminationStatus == 0 {
-            return .success
-        }
-
-        let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        let errorMessage = String(data: errorData, encoding: .utf8) ?? ""
-
-        if errorMessage.contains("-128") || errorMessage.contains("User canceled") {
-            return .cancelled
-        }
-
-        return .failed
-    }
-
-    // MARK: - Approach 3: Fallback with copyable command
+    // MARK: - Fallback with copyable command
 
     private static func showFallback(title: String, message: String, command: String) {
         let alert = NSAlert()
