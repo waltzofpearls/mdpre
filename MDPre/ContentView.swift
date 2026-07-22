@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var fileWatcher: FileWatcher?
     @State private var showFindBar = false
     @State private var viewMode: ViewMode = .preview
+    @AppStorage("themeMode") private var themeMode: ThemeMode = .system
     @State private var scrollPercent: Double = 0
     @State private var stats: DocumentStats = .empty
 
@@ -45,6 +46,7 @@ struct ContentView: View {
             case .source:
                 SourceWebView(
                     markdown: displayText,
+                    themeMode: themeMode,
                     initialScrollPercent: scrollPercent,
                     onScrollSync: { percent in
                         scrollPercent = percent
@@ -54,6 +56,7 @@ struct ContentView: View {
                 HSplitView {
                     SourceWebView(
                         markdown: displayText,
+                        themeMode: themeMode,
                         initialScrollPercent: scrollPercent,
                         onScrollSync: { percent in
                             scrollPercent = percent
@@ -101,6 +104,9 @@ struct ContentView: View {
                 TableOfContentsToolbarButton()
                     .disabled(viewMode != .preview)
             }
+            ToolbarItem(placement: .automatic) {
+                ThemeToolbarButton(themeMode: $themeMode)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleFindBar)) { _ in
             showFindBar.toggle()
@@ -112,6 +118,7 @@ struct ContentView: View {
             markdown: displayText,
             sourceFileURL: fileURL,
             exportHandler: exportHandler,
+            themeMode: themeMode,
             onNavigateToFile: { url in
                 NSDocumentController.shared.openDocument(
                     withContentsOf: url, display: true

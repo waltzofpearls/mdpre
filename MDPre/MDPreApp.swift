@@ -73,6 +73,7 @@ struct MDPreApp: App {
                     }
                 }
             }
+            AppearanceCommands()
             ExportCommands()
             FindCommands()
         }

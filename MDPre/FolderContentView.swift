@@ -22,6 +22,7 @@ import WebKit
 
 struct FolderContentView: View {
     @Bindable var viewModel: FolderViewModel
+    @AppStorage("themeMode") private var themeMode: ThemeMode = .system
     @State private var exportHandler: ExportHandler?
     @State private var scrollPercent: Double = 0
     @State private var stats: DocumentStats = .empty
@@ -39,6 +40,7 @@ struct FolderContentView: View {
                     case .source:
                         SourceWebView(
                             markdown: viewModel.selectedFileContent,
+                            themeMode: themeMode,
                             initialScrollPercent: scrollPercent,
                             onScrollSync: { percent in
                                 scrollPercent = percent
@@ -48,6 +50,7 @@ struct FolderContentView: View {
                         HSplitView {
                             SourceWebView(
                                 markdown: viewModel.selectedFileContent,
+                                themeMode: themeMode,
                                 initialScrollPercent: scrollPercent,
                                 onScrollSync: { percent in
                                     scrollPercent = percent
@@ -106,6 +109,7 @@ struct FolderContentView: View {
             sourceFileURL: viewModel.selectedFile,
             exportHandler: exportHandler,
             fullWidth: true,
+            themeMode: themeMode,
             onNavigateToFile: { url in
                 if viewModel.files.contains(url) {
                     viewModel.selectedFile = url

@@ -26,6 +26,7 @@ struct MarkdownWebView: NSViewRepresentable {
     var sourceFileURL: URL?
     var exportHandler: ExportHandler?
     var fullWidth: Bool = false
+    var themeMode: ThemeMode = .system
     var onNavigateToFile: ((URL) -> Void)?
     var initialScrollPercent: Double = 0
     var onScrollSync: ((Double) -> Void)?
@@ -50,6 +51,7 @@ struct MarkdownWebView: NSViewRepresentable {
     func updateNSView(_ webView: WKWebView, context: Context) {
         context.coordinator.parent = self
         exportHandler?.webView = webView
+        webView.appearance = themeMode.appearance
 
         if context.coordinator.isLoaded {
             if markdown != context.coordinator.lastRenderedMarkdown {
