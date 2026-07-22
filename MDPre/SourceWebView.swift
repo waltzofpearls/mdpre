@@ -22,6 +22,7 @@ import WebKit
 
 struct SourceWebView: NSViewRepresentable {
     let markdown: String
+    var themeMode: ThemeMode = .system
     var initialScrollPercent: Double = 0
     var onScrollSync: ((Double) -> Void)?
 
@@ -42,6 +43,7 @@ struct SourceWebView: NSViewRepresentable {
 
     func updateNSView(_ webView: WKWebView, context: Context) {
         context.coordinator.parent = self
+        webView.appearance = themeMode.appearance
         if context.coordinator.isLoaded {
             if markdown != context.coordinator.lastRenderedMarkdown {
                 renderSource(in: webView, context: context)

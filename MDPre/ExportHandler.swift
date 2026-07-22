@@ -40,10 +40,16 @@ class ExportHandler {
 
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
-        let config = WKPDFConfiguration()
-        webView.createPDF(configuration: config) { result in
-            if case .success(let data) = result {
-                try? data.write(to: url)
+        let savedAppearance = webView.appearance
+        webView.appearance = NSAppearance(named: .aqua)
+
+        webView.evaluateJavaScript("document.body.offsetHeight") { _, _ in
+            let config = WKPDFConfiguration()
+            webView.createPDF(configuration: config) { result in
+                webView.appearance = savedAppearance
+                if case .success(let data) = result {
+                    try? data.write(to: url)
+                }
             }
         }
     }
@@ -64,6 +70,9 @@ class ExportHandler {
         guard let webView,
               let window = webView.window else { return }
 
+        let savedAppearance = webView.appearance
+        webView.appearance = NSAppearance(named: .aqua)
+
         let printInfo = NSPrintInfo.shared.copy() as! NSPrintInfo
         printInfo.horizontalPagination = .fit
         printInfo.verticalPagination = .automatic
@@ -77,14 +86,25 @@ class ExportHandler {
         printOp.showsPrintPanel = true
         printOp.showsProgressPanel = true
         printOp.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+
+        webView.appearance = savedAppearance
     }
 
     func buildSelfContainedHTML() -> String {
-        let css = loadResource("github-markdown", ext: "css") ?? ""
+        var css = loadResource("github-markdown", ext: "css") ?? ""
         let highlightCSS = loadResource("highlight-github.min", ext: "css") ?? ""
-        let highlightDarkCSS = loadResource("highlight-github-dark.min", ext: "css") ?? ""
         let markedJS = loadResource("marked.min", ext: "js") ?? ""
         let highlightJS = loadResource("highlight.min", ext: "js") ?? ""
+
+        // Force light theme: disable dark, make light unconditional
+        css = css.replacingOccurrences(
+            of: "@media (prefers-color-scheme: dark) {",
+            with: "@media not all {"
+        )
+        css = css.replacingOccurrences(
+            of: "@media (prefers-color-scheme: light) {",
+            with: "@media all {"
+        )
 
         let escapedMarkdown = markdown
             .replacingOccurrences(of: "\\", with: "\\\\")
@@ -97,8 +117,7 @@ class ExportHandler {
         <head>
         <meta charset="utf-8">
         <style>\(css)</style>
-        <style media="(prefers-color-scheme: light)">\(highlightCSS)</style>
-        <style media="(prefers-color-scheme: dark)">\(highlightDarkCSS)</style>
+        <style>\(highlightCSS)</style>
         <style>
             body { margin: 0; padding: 0; background-color: var(--bgColor-default); }
             .markdown-body {

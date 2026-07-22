@@ -20,14 +20,22 @@
 import AppKit
 import SwiftUI
 
+extension UserDefaults {
+    @objc dynamic var themeMode: String {
+        string(forKey: "themeMode") ?? ThemeMode.system.rawValue
+    }
+}
+
 extension NSToolbarItem.Identifier {
     static let tableOfContents = NSToolbarItem.Identifier("tableOfContents")
     static let viewMode = NSToolbarItem.Identifier("viewMode")
+    static let appearance = NSToolbarItem.Identifier("appearance")
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var folderWindows: [String: NSWindow] = [:]
     private var folderViewModels: [String: FolderViewModel] = [:]
+    private var themeModeObserver: NSKeyValueObservation?
 
     func application(_ application: NSApplication, open urls: [URL]) {
         var fileURLs: [URL] = []
@@ -127,6 +135,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         toolbar.displayMode = .iconOnly
         window.toolbar = toolbar
 
+        if themeModeObserver == nil {
+            themeModeObserver = UserDefaults.standard.observe(\.themeMode, options: [.new]) { [weak self] _, _ in
+                DispatchQueue.main.async {
+                    self?.updateThemeButtons()
+                }
+            }
+        }
+
         // Set initial sidebar width
         splitVC.splitView.setPosition(260, ofDividerAt: 0)
 
@@ -157,6 +173,7 @@ extension AppDelegate: NSToolbarDelegate {
             .viewMode,
             .flexibleSpace,
             .tableOfContents,
+            .appearance,
         ]
     }
 
@@ -202,6 +219,19 @@ extension AppDelegate: NSToolbarDelegate {
             item.label = "Table of Contents"
             item.toolTip = "Table of Contents"
             return item
+        case .appearance:
+            let mode = currentThemeMode
+            let item = NSToolbarItem(itemIdentifier: .appearance)
+            let button = NSButton(
+                image: NSImage(systemSymbolName: mode.iconName, accessibilityDescription: "Appearance")!,
+                target: self,
+                action: #selector(showThemeMenu(_:))
+            )
+            button.bezelStyle = .toolbar
+            item.view = button
+            item.label = "Appearance"
+            item.toolTip = "Appearance"
+            return item
         default:
             return nil
         }
@@ -234,6 +264,47 @@ extension AppDelegate: NSToolbarDelegate {
     @objc private func showTableOfContents(_ sender: NSButton) {
         guard let webView = TableOfContents.findWebView(in: sender.window) else { return }
         TableOfContents.showMenu(from: webView, relativeTo: sender)
+    }
+
+    private var currentThemeMode: ThemeMode {
+        ThemeMode(rawValue: UserDefaults.standard.string(forKey: "themeMode") ?? "") ?? .system
+    }
+
+    @objc private func showThemeMenu(_ sender: NSButton) {
+        let current = currentThemeMode
+        let menu = NSMenu()
+        for mode in ThemeMode.allCases {
+            let item = NSMenuItem(
+                title: mode.menuTitle,
+                action: #selector(themeMenuItemClicked(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = mode.rawValue
+            item.state = mode == current ? .on : .off
+            item.image = NSImage(systemSymbolName: mode.iconName, accessibilityDescription: mode.menuTitle)
+            menu.addItem(item)
+        }
+        let point = NSPoint(x: sender.bounds.minX, y: sender.bounds.maxY)
+        menu.popUp(positioning: nil, at: point, in: sender)
+    }
+
+    @objc private func themeMenuItemClicked(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let mode = ThemeMode(rawValue: rawValue) else { return }
+        UserDefaults.standard.set(mode.rawValue, forKey: "themeMode")
+        updateThemeButtons()
+    }
+
+    private func updateThemeButtons() {
+        let mode = currentThemeMode
+        let image = NSImage(systemSymbolName: mode.iconName, accessibilityDescription: "Appearance")
+        for (_, window) in folderWindows {
+            if let item = window.toolbar?.items.first(where: { $0.itemIdentifier == .appearance }),
+               let button = item.view as? NSButton {
+                button.image = image
+            }
+        }
     }
 }
 
