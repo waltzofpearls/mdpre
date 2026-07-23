@@ -37,6 +37,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var folderViewModels: [String: FolderViewModel] = [:]
     private var themeModeObserver: NSKeyValueObservation?
 
+    func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
+        false
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        DispatchQueue.main.async {
+            let hasVisibleDoc = NSApp.windows.contains { $0.isVisible && !($0 is NSPanel) }
+            if !hasVisibleDoc {
+                NSDocumentController.shared.openDocument(nil)
+            }
+        }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            NSDocumentController.shared.openDocument(nil)
+        }
+        return false
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
         var fileURLs: [URL] = []
 
@@ -109,7 +129,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.onFind = { viewModel.showFindBar.toggle() }
+        window.onSave = { [weak viewModel] in viewModel?.saveCurrentFile() }
         window.isReleasedWhenClosed = false
         window.minSize = NSSize(width: 700, height: 500)
         window.toolbarStyle = .unified
@@ -191,10 +211,10 @@ extension AppDelegate: NSToolbarDelegate {
             let item = NSToolbarItem(itemIdentifier: .viewMode)
             let images = [
                 toolbarSymbolImage("eye", "Preview"),
-                toolbarSymbolImage("chevron.left.forwardslash.chevron.right", "Source"),
+                toolbarSymbolImage("square.and.pencil", "Edit"),
                 toolbarSymbolImage("rectangle.split.2x1", "Split"),
             ]
-            let labels = ["Preview", "Source", "Split"]
+            let labels = ["Preview", "Edit", "Split"]
             let control = NSSegmentedControl(images: images, trackingMode: .selectOne, target: self, action: #selector(viewModeChanged(_:)))
             control.segmentCount = 3
             for i in 0..<3 {
@@ -311,6 +331,24 @@ extension AppDelegate: NSToolbarDelegate {
 // MARK: - NSWindowDelegate
 
 extension AppDelegate: NSWindowDelegate {
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard sender.isDocumentEdited,
+              let path = folderWindows.first(where: { $0.value === sender })?.key,
+              let viewModel = folderViewModels[path],
+              let fileURL = viewModel.selectedFile else { return true }
+
+        let response = FolderContentView.showUnsavedChangesAlert(filename: fileURL.lastPathComponent)
+        switch response {
+        case .alertFirstButtonReturn:
+            viewModel.saveCurrentFile()
+            return true
+        case .alertSecondButtonReturn:
+            return true
+        default:
+            return false
+        }
+    }
+
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
         let closedPaths = folderWindows.filter { $0.value === window }.map(\.key)

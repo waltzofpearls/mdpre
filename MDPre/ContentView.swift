@@ -34,35 +34,21 @@ struct ContentView: View {
     @AppStorage("themeMode") private var themeMode: ThemeMode = .system
     @State private var scrollPercent: Double = 0
     @State private var stats: DocumentStats = .empty
+    @State private var editorWebView: WKWebView?
 
     var body: some View {
         VStack(spacing: 0) {
             if showFindBar {
-                FindBar(isVisible: $showFindBar)
+                FindBar(isVisible: $showFindBar, viewMode: viewMode)
             }
             switch viewMode {
             case .preview:
                 markdownPreview
-            case .source:
-                SourceWebView(
-                    markdown: displayText,
-                    themeMode: themeMode,
-                    initialScrollPercent: scrollPercent,
-                    onScrollSync: { percent in
-                        scrollPercent = percent
-                    }
-                )
+            case .edit:
+                editorWithToolbar
             case .split:
                 HSplitView {
-                    SourceWebView(
-                        markdown: displayText,
-                        themeMode: themeMode,
-                        initialScrollPercent: scrollPercent,
-                        onScrollSync: { percent in
-                            scrollPercent = percent
-                            syncScroll(percent: percent, fromSource: true)
-                        }
-                    )
+                    editorWithToolbar
                     .frame(minWidth: 200)
                     .overlay(alignment: .trailing) {
                         Rectangle()
@@ -82,6 +68,9 @@ struct ContentView: View {
             checkFolderAccessIfNeeded()
             startFileWatcher()
             stats = DocumentStats.compute(from: displayText)
+            if fileURL == nil {
+                viewMode = .edit
+            }
         }
         .onDisappear {
             fileWatcher?.stopWatching()
@@ -94,6 +83,9 @@ struct ContentView: View {
             exportHandler?.markdown = newValue
             checkFolderAccessIfNeeded()
             stats = DocumentStats.compute(from: newValue)
+        }
+        .onChange(of: viewMode) { _, _ in
+            showFindBar = false
         }
         .focusedSceneValue(\.exportHandler, exportHandler)
         .toolbar {
@@ -111,6 +103,38 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .toggleFindBar)) { _ in
             showFindBar.toggle()
         }
+    }
+
+    private var editorWithToolbar: some View {
+        VStack(spacing: 0) {
+            EditorToolbar(webView: editorWebView)
+            Divider()
+            editorView
+        }
+    }
+
+    private var editorView: some View {
+        EditorWebView(
+            markdown: displayText,
+            themeMode: themeMode,
+            initialScrollPercent: scrollPercent,
+            onContentChange: { content in
+                displayText = content
+                document.text = content
+            },
+            onScrollSync: { percent in
+                scrollPercent = percent
+                if viewMode == .split {
+                    syncScroll(percent: percent, fromSource: true)
+                }
+            },
+            onWebViewReady: { wv in
+                editorWebView = wv
+            },
+            onToggleFind: {
+                showFindBar.toggle()
+            }
+        )
     }
 
     private var markdownPreview: some View {
@@ -185,6 +209,7 @@ struct ContentView: View {
         guard let fileURL else { return }
         fileWatcher = FileWatcher(url: fileURL) { newContent in
             displayText = newContent
+            document.text = newContent
         }
     }
 

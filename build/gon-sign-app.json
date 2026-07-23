@@ -9,6 +9,6 @@
   },
   "sign": {
     "application_identity": "Developer ID Application: Ruo-Lei Ma (L2AR6TDY65)",
-    "entitlements_file": "./MDPre/MDPre.entitlements"
+    "entitlements_file": "./build/MDPre-Release.entitlements"
   }
 }

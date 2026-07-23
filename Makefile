@@ -91,8 +91,8 @@ APPSTORE_SCHEME := MDPre-AppStore
 APPSTORE_ARCHIVE := $(BUILD)/MDPre-AppStore.xcarchive
 APPSTORE_EXPORT_OPTIONS := $(BUILD)/ExportOptions-AppStore.plist
 
-.PHONY: release-appstore
-release-appstore: ## Archive and upload to App Store Connect
+.PHONY: archive-appstore
+archive-appstore: ## Archive App Store build for local testing
 	-rm -rf $(APPSTORE_ARCHIVE)
 	xcodebuild -project ./$(APP).xcodeproj/ \
 		-scheme $(APPSTORE_SCHEME) \
@@ -103,6 +103,11 @@ release-appstore: ## Archive and upload to App Store Connect
 		archive \
 		-archivePath $(APPSTORE_ARCHIVE)
 	rm -rf "$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app/Contents/Frameworks/Sparkle.framework"
+	@echo "Archive ready at $(APPSTORE_ARCHIVE)"
+	@echo "Test app: $(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app"
+
+.PHONY: release-appstore
+release-appstore: archive-appstore ## Archive and upload to App Store Connect
 	xcodebuild -exportArchive \
 		-archivePath $(APPSTORE_ARCHIVE) \
 		-exportOptionsPlist $(APPSTORE_EXPORT_OPTIONS) \

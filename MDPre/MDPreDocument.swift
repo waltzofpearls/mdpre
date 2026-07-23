@@ -28,7 +28,7 @@ nonisolated struct MDPreDocument: FileDocument {
     var text: String
 
     static let readableContentTypes: [UTType] = [.markdown, .plainText]
-    static let writableContentTypes: [UTType] = []
+    static let writableContentTypes: [UTType] = [.markdown]
 
     init(text: String = "") {
         self.text = text

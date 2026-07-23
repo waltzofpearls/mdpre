@@ -26,37 +26,24 @@ struct FolderContentView: View {
     @State private var exportHandler: ExportHandler?
     @State private var scrollPercent: Double = 0
     @State private var stats: DocumentStats = .empty
+    @State private var editorWebView: WKWebView?
+    @State private var isRevertingSelection = false
 
     var body: some View {
         VStack(spacing: 0) {
             if viewModel.showFindBar {
-                FindBar(isVisible: $viewModel.showFindBar)
+                FindBar(isVisible: $viewModel.showFindBar, viewMode: viewModel.viewMode)
             }
             Group {
                 if viewModel.selectedFile != nil {
                     switch viewModel.viewMode {
                     case .preview:
                         markdownPreview
-                    case .source:
-                        SourceWebView(
-                            markdown: viewModel.selectedFileContent,
-                            themeMode: themeMode,
-                            initialScrollPercent: scrollPercent,
-                            onScrollSync: { percent in
-                                scrollPercent = percent
-                            }
-                        )
+                    case .edit:
+                        editorWithToolbar
                     case .split:
                         HSplitView {
-                            SourceWebView(
-                                markdown: viewModel.selectedFileContent,
-                                themeMode: themeMode,
-                                initialScrollPercent: scrollPercent,
-                                onScrollSync: { percent in
-                                    scrollPercent = percent
-                                    syncScroll(percent: percent, fromSource: true)
-                                }
-                            )
+                            editorWithToolbar
                             .frame(minWidth: 200)
                             .overlay(alignment: .trailing) {
                                 Rectangle()
@@ -86,11 +73,41 @@ struct FolderContentView: View {
             exportHandler?.markdown = newValue
             stats = DocumentStats.compute(from: newValue)
         }
-        .onChange(of: viewModel.selectedFile) { _, _ in
+        .onChange(of: viewModel.viewMode) { _, _ in
+            viewModel.showFindBar = false
+        }
+        .onChange(of: viewModel.selectedFile) { oldValue, newValue in
+            if isRevertingSelection {
+                isRevertingSelection = false
+                return
+            }
+
+            if viewModel.isDirty, let content = viewModel.dirtyContent, let url = viewModel.dirtyFileURL {
+                let response = Self.showUnsavedChangesAlert(filename: url.lastPathComponent)
+                switch response {
+                case .alertFirstButtonReturn:
+                    viewModel.pauseFileWatcher()
+                    try? content.write(to: url, atomically: true, encoding: .utf8)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        viewModel.resumeFileWatcher()
+                    }
+                case .alertThirdButtonReturn:
+                    isRevertingSelection = true
+                    viewModel.selectedFile = oldValue
+                    return
+                default:
+                    break
+                }
+            }
+
+            viewModel.clearDirtyState()
+
+            if let newValue {
+                viewModel.loadContent(for: newValue)
+            }
             viewModel.updateWindowTitle()
             viewModel.viewMode = .preview
             scrollPercent = 0
-            // Reset toolbar to match preview mode
             if let toolbar = viewModel.window?.toolbar {
                 if let segmented = toolbar.items.first(where: { $0.itemIdentifier == .viewMode })?.view as? NSSegmentedControl {
                     segmented.selectedSegment = 0
@@ -101,6 +118,54 @@ struct FolderContentView: View {
             }
         }
         .focusedSceneValue(\.exportHandler, exportHandler)
+        .onReceive(NotificationCenter.default.publisher(for: .toggleFindBar)) { _ in
+            viewModel.showFindBar.toggle()
+        }
+    }
+
+    static func showUnsavedChangesAlert(filename: String) -> NSApplication.ModalResponse {
+        let alert = NSAlert()
+        alert.messageText = "Do you want to save the changes you made to \(filename)?"
+        alert.informativeText = "Your changes will be lost if you don't save them."
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Don't Save")
+        alert.addButton(withTitle: "Cancel")
+        return alert.runModal()
+    }
+
+    private var editorWithToolbar: some View {
+        VStack(spacing: 0) {
+            EditorToolbar(webView: editorWebView)
+            Divider()
+            editorView
+        }
+    }
+
+    private var editorView: some View {
+        EditorWebView(
+            markdown: viewModel.selectedFileContent,
+            themeMode: themeMode,
+            initialScrollPercent: scrollPercent,
+            onContentChange: { content in
+                viewModel.selectedFileContent = content
+                viewModel.isDirty = true
+                viewModel.dirtyContent = content
+                viewModel.dirtyFileURL = viewModel.selectedFile
+                viewModel.window?.isDocumentEdited = true
+            },
+            onScrollSync: { percent in
+                scrollPercent = percent
+                if viewModel.viewMode == .split {
+                    syncScroll(percent: percent, fromSource: true)
+                }
+            },
+            onWebViewReady: { wv in
+                editorWebView = wv
+            },
+            onToggleFind: {
+                viewModel.showFindBar.toggle()
+            }
+        )
     }
 
     private var markdownPreview: some View {

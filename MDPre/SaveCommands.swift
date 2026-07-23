@@ -1,5 +1,5 @@
 //
-//  FolderWindow.swift
+//  SaveCommands.swift
 //  MDPre (Markdown Preview)
 //
 //  Copyright 2026 Rollie Ma (Ruo-Lei Ma) rollie@rollie.dev
@@ -17,12 +17,29 @@
 //  limitations under the License.
 //
 
-import AppKit
+import SwiftUI
 
-class FolderWindow: NSWindow {
-    var onSave: (() -> Void)?
+struct SaveActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
 
-    @IBAction func saveDocument(_ sender: Any?) {
-        onSave?()
+extension FocusedValues {
+    var saveAction: (() -> Void)? {
+        get { self[SaveActionKey.self] }
+        set { self[SaveActionKey.self] = newValue }
+    }
+}
+
+struct SaveCommands: Commands {
+    @FocusedValue(\.saveAction) var saveAction
+
+    var body: some Commands {
+        CommandGroup(replacing: .saveItem) {
+            Button("Save") {
+                saveAction?()
+            }
+            .keyboardShortcut("s", modifiers: [.command])
+            .disabled(saveAction == nil)
+        }
     }
 }

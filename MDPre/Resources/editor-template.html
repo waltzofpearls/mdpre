@@ -1,0 +1,62 @@
+<!--
+  editor-template.html
+  MDPre (Markdown Preview)
+
+  Copyright 2026 Rollie Ma (Ruo-Lei Ma) rollie@rollie.dev
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="codemirror-editor.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    #editor { height: 100%; }
+    .cm-editor { height: 100%; }
+    .cm-editor.cm-focused { outline: none; }
+</style>
+</head>
+<body>
+<div id="editor"></div>
+<script>
+    MDPreEditor.initEditor(document.getElementById("editor"));
+
+    function setContent(text) { MDPreEditor.setContent(text); }
+    function getContent() { return MDPreEditor.getContent(); }
+    function scrollToPercent(p) { MDPreEditor.scrollToPercent(p); }
+
+    function formatBold() { MDPreEditor.formatBold(); }
+    function formatItalic() { MDPreEditor.formatItalic(); }
+    function formatStrikethrough() { MDPreEditor.formatStrikethrough(); }
+    function formatCode() { MDPreEditor.formatCode(); }
+    function formatCodeBlock() { MDPreEditor.formatCodeBlock(); }
+    function formatHeading(level) { MDPreEditor.formatHeading(level); }
+    function formatUnorderedList() { MDPreEditor.formatUnorderedList(); }
+    function formatOrderedList() { MDPreEditor.formatOrderedList(); }
+    function formatBlockquote() { MDPreEditor.formatBlockquote(); }
+    function formatHorizontalRule() { MDPreEditor.formatHorizontalRule(); }
+    function formatLink() { MDPreEditor.formatLink(); }
+    function formatImage() { MDPreEditor.formatImage(); }
+    function formatTable() { MDPreEditor.formatTable(); }
+
+    function findInPage(q) { return MDPreEditor.findInPage(q); }
+    function findNext() { return MDPreEditor.findNext(); }
+    function findPrevious() { return MDPreEditor.findPrevious(); }
+    function clearFind() { MDPreEditor.clearFind(); }
+</script>
+</body>
+</html>

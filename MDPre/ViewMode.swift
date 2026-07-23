@@ -19,6 +19,6 @@
 
 enum ViewMode: String, CaseIterable {
     case preview
-    case source
+    case edit
     case split
 }

@@ -28,6 +28,9 @@ class FolderViewModel {
     var selectedFileContent: String = ""
     var showFindBar = false
     var viewMode: ViewMode = .preview
+    var isDirty = false
+    var dirtyContent: String?
+    var dirtyFileURL: URL?
 
     @ObservationIgnored weak var window: NSWindow?
     private var eventStream: FSEventStreamRef?
@@ -150,6 +153,39 @@ class FolderViewModel {
         fileWatcher = FileWatcher(url: selectedFile) { [weak self] newContent in
             self?.selectedFileContent = newContent
         }
+    }
+
+    func saveCurrentFile() {
+        guard let fileURL = selectedFile, isDirty else { return }
+        pauseFileWatcher()
+        do {
+            try selectedFileContent.write(to: fileURL, atomically: true, encoding: .utf8)
+            isDirty = false
+            dirtyContent = nil
+            dirtyFileURL = nil
+            window?.isDocumentEdited = false
+        } catch {
+            let alert = NSAlert(error: error)
+            alert.runModal()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.resumeFileWatcher()
+        }
+    }
+
+    func clearDirtyState() {
+        isDirty = false
+        dirtyContent = nil
+        dirtyFileURL = nil
+        window?.isDocumentEdited = false
+    }
+
+    func pauseFileWatcher() {
+        fileWatcher?.stopWatching()
+    }
+
+    func resumeFileWatcher() {
+        startFileWatching()
     }
 
     func updateWindowTitle() {
