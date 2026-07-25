@@ -38,10 +38,10 @@ struct ViewModeToolbarButton: NSViewRepresentable {
     func makeNSView(context: Context) -> NSSegmentedControl {
         let images = [
             symbolImage("eye", "Preview"),
-            symbolImage("chevron.left.forwardslash.chevron.right", "Source"),
+            symbolImage("square.and.pencil", "Edit"),
             symbolImage("rectangle.split.2x1", "Split"),
         ]
-        let labels = ["Preview", "Source", "Split"]
+        let labels = ["Preview", "Edit", "Split"]
 
         let control = NSSegmentedControl(images: images, trackingMode: .selectOne, target: context.coordinator, action: #selector(Coordinator.segmentChanged(_:)))
         control.segmentCount = 3

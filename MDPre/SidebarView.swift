@@ -26,11 +26,6 @@ struct SidebarView: View {
         List(viewModel.files, id: \.self, selection: $viewModel.selectedFile) { fileURL in
             SidebarRow(fileURL: fileURL, folderURL: viewModel.folderURL)
         }
-        .onChange(of: viewModel.selectedFile) { _, newValue in
-            if let newValue {
-                viewModel.loadContent(for: newValue)
-            }
-        }
         .listStyle(.sidebar)
     }
 }

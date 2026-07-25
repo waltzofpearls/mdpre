@@ -28,6 +28,7 @@ struct FindResult: Decodable {
 
 struct FindBar: NSViewRepresentable {
     @Binding var isVisible: Bool
+    var viewMode: ViewMode = .preview
 
     func makeNSView(context: Context) -> FindBarView {
         let view = FindBarView(coordinator: context.coordinator)
@@ -61,7 +62,6 @@ struct FindBar: NSViewRepresentable {
 
     class Coordinator: NSObject, NSSearchFieldDelegate {
         let parent: FindBar
-        weak var webView: WKWebView?
         var currentQuery = ""
 
         init(parent: FindBar) {
@@ -91,39 +91,56 @@ struct FindBar: NSViewRepresentable {
         }
 
         func search(query: String) {
-            guard let webView = findWebView() else { return }
             let escaped = query.replacingOccurrences(of: "\\", with: "\\\\")
                 .replacingOccurrences(of: "'", with: "\\'")
-            webView.evaluateJavaScript("findInPage('\(escaped)')") { [weak self] result, _ in
-                self?.updateMatchCount(from: result)
+            let webViews = findAllWebViews()
+            let primary = primaryWebView(from: webViews)
+            for wv in webViews {
+                wv.evaluateJavaScript("findInPage('\(escaped)')") { [weak self] result, _ in
+                    if wv === primary {
+                        self?.updateMatchCount(from: result)
+                    }
+                }
             }
         }
 
         func findNext() {
-            guard let webView = findWebView() else { return }
-            webView.evaluateJavaScript("findNext()") { [weak self] result, _ in
+            guard let primary = primaryWebView(from: findAllWebViews()) else { return }
+            primary.evaluateJavaScript("findNext()") { [weak self] result, _ in
                 self?.updateMatchCount(from: result)
             }
         }
 
         func findPrevious() {
-            guard let webView = findWebView() else { return }
-            webView.evaluateJavaScript("findPrevious()") { [weak self] result, _ in
+            guard let primary = primaryWebView(from: findAllWebViews()) else { return }
+            primary.evaluateJavaScript("findPrevious()") { [weak self] result, _ in
                 self?.updateMatchCount(from: result)
             }
         }
 
         func dismiss() {
-            findWebView()?.evaluateJavaScript("clearFind()")
+            for wv in findAllWebViews() {
+                wv.evaluateJavaScript("clearFind()")
+            }
             parent.isVisible = false
         }
 
-        private func findWebView() -> WKWebView? {
-            if let webView { return webView }
-            guard let view = NSApp.keyWindow else { return nil }
-            let found = TableOfContents.findWebView(in: view)
-            webView = found
-            return found
+        private func findAllWebViews() -> [WKWebView] {
+            guard let contentView = NSApp.keyWindow?.contentView else { return [] }
+            return collectWebViews(in: contentView)
+        }
+
+        private func primaryWebView(from webViews: [WKWebView]) -> WKWebView? {
+            webViews.first
+        }
+
+        private func collectWebViews(in view: NSView) -> [WKWebView] {
+            var results: [WKWebView] = []
+            if let wv = view as? WKWebView { results.append(wv) }
+            for subview in view.subviews {
+                results.append(contentsOf: collectWebViews(in: subview))
+            }
+            return results
         }
 
         private func updateMatchCount(from result: Any?) {
@@ -228,14 +245,6 @@ struct FindCommands: Commands {
 enum FindBarController {
     static func toggleFindBar() {
         guard let window = NSApp.keyWindow else { return }
-
-        // Folder window — toggle via viewModel
-        if let folderWindow = window as? FolderWindow {
-            folderWindow.onFind?()
-            return
-        }
-
-        // Single-file window — post notification for ContentView
         NotificationCenter.default.post(name: .toggleFindBar, object: window)
     }
 }

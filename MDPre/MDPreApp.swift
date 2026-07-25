@@ -32,9 +32,10 @@ struct MDPreApp: App {
     #endif
 
     var body: some Scene {
-        DocumentGroup(viewing: MDPreDocument.self) { file in
+        DocumentGroup(newDocument: MDPreDocument()) { file in
             ContentView(document: file.$document, fileURL: file.fileURL)
         }
+        .defaultLaunchBehavior(.suppressed)
         .defaultSize(width: 980, height: 760)
         .commands {
             CommandGroup(replacing: .appInfo) {
