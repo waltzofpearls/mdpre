@@ -310,10 +310,12 @@ export function formatHeading(level) {
   if (match) {
     editor.dispatch({
       changes: { from: line.from, to: line.from + match[0].length, insert: prefix },
+      selection: { anchor: line.from + prefix.length },
     });
   } else {
     editor.dispatch({
       changes: { from: line.from, to: line.from, insert: prefix },
+      selection: { anchor: line.from + prefix.length },
     });
   }
   editor.focus();
