@@ -37,24 +37,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var folderViewModels: [String: FolderViewModel] = [:]
     private var themeModeObserver: NSKeyValueObservation?
 
+    /// Stops AppKit from creating an untitled document, so the open panel is shown
+    /// instead, both on launch and when the dock icon is clicked with no windows open.
+    ///
+    /// The launch presentation comes from the DocumentGroup's default `.automatic`
+    /// behavior, which shows the panel only when no other scene has presented. A
+    /// restored window or a document opened from Finder appears on its own.
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
         false
-    }
-
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        DispatchQueue.main.async {
-            let hasVisibleDoc = NSApp.windows.contains { $0.isVisible && !($0 is NSPanel) }
-            if !hasVisibleDoc {
-                NSDocumentController.shared.openDocument(nil)
-            }
-        }
-    }
-
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag {
-            NSDocumentController.shared.openDocument(nil)
-        }
-        return false
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {

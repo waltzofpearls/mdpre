@@ -40,6 +40,10 @@
     .markdown-body {
         box-sizing: border-box;
         min-width: 200px;
+        /* Fill the window for short documents. Without this the article stops at the
+           last line and the body background shows as a band underneath. 100vh because
+           body and html have auto height, so a percentage would compute to auto. */
+        min-height: 100vh;
         padding: 45px;
         background-color: var(--bgColor-default);
     }
@@ -76,6 +80,8 @@
         .markdown-body {
             max-width: none;
             padding: 0;
+            /* Undo the viewport fill so printing does not emit a blank block. */
+            min-height: 0;
         }
         pre, code, table, figure, blockquote {
             page-break-inside: avoid;
