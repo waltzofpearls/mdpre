@@ -88,12 +88,14 @@ clean: ## Remove build artifacts
 	rm -rf $(BIN) $(TMP)
 
 APPSTORE_SCHEME := MDPre-AppStore
-APPSTORE_ARCHIVE := $(BUILD)/MDPre-AppStore.xcarchive
+# Timestamped so each archive is kept. Previous archives, and the dSYMs needed to
+# symbolicate crash reports from shipped builds, are never overwritten.
+APPSTORE_ARCHIVE := $(BUILD)/archives/MDPre-$(MARKETING_VERSION)-$(BUILD_VERSION).xcarchive
 APPSTORE_EXPORT_OPTIONS := $(BUILD)/ExportOptions-AppStore.plist
 
 .PHONY: archive-appstore
 archive-appstore: ## Archive App Store build for local testing
-	-rm -rf $(APPSTORE_ARCHIVE)
+	mkdir -p $(BUILD)/archives
 	xcodebuild -project ./$(APP).xcodeproj/ \
 		-scheme $(APPSTORE_SCHEME) \
 		-configuration Release-AppStore \
@@ -105,6 +107,7 @@ archive-appstore: ## Archive App Store build for local testing
 	rm -rf "$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app/Contents/Frameworks/Sparkle.framework"
 	@echo "Archive ready at $(APPSTORE_ARCHIVE)"
 	@echo "Test app: $(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app"
+	@echo "Build number: $(BUILD_VERSION)"
 
 .PHONY: release-appstore
 release-appstore: archive-appstore ## Archive and upload to App Store Connect
