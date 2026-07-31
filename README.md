@@ -4,37 +4,33 @@
 
 # MDPre: Markdown Preview
 
-A macOS markdown preview app built for developers, with AI cost estimation, side-by-side source view, and live reload.
+A macOS markdown preview app built for developers, with light editing, AI cost estimation, and live reload.
 
-**Single-file preview**
+**Single file preview**
 
-<p>
-  <img src="docs/single-file-mode-preview-light.png" alt="Single file preview in light mode" width="49%">
-  <img src="docs/single-file-mode-preview-dark.png" alt="Single file preview in dark mode" width="49%">
-</p>
+<img src="docs/preview.png" alt="Single file preview">
 
-**Side-by-side source and preview**
+**Editing with formatting toolbar**
 
-<p>
-  <img src="docs/single-file-mode-split-light.png" alt="Split view in light mode" width="49%">
-  <img src="docs/single-file-mode-split-dark.png" alt="Split view in dark mode" width="49%">
-</p>
+<img src="docs/edit.png" alt="Editor with formatting toolbar">
+
+**Side-by-side editor and preview**
+
+<img src="docs/split.png" alt="Split view with editor and preview">
 
 **Folder mode with sidebar**
 
-<p>
-  <img src="docs/folder-mode-light.png" alt="Folder mode in light mode" width="49%">
-  <img src="docs/folder-mode-dark.png" alt="Folder mode in dark mode" width="49%">
-</p>
+<img src="docs/folder-mode.png" alt="Folder mode with sidebar">
 
 ## Features
 
 - **GitHub Flavored Markdown** rendered with [marked](https://github.com/markedjs/marked) and [github-markdown-css](https://github.com/sindresorhus/github-markdown-css), with syntax highlighting via [highlight.js](https://highlightjs.org/)
 - **Document stats** showing word count, character count, token count, and estimated AI processing cost
-- **Side-by-side view** with source and preview, synchronized scrolling
-- **Source view** with syntax-highlighted raw markdown
+- **Light editing** with a [CodeMirror 6](https://codemirror.net/) editor, syntax highlighting, and a formatting toolbar for bold, italic, headings, lists, links, images, tables, and code blocks
+- **Side-by-side view** with editor and preview, synchronized scrolling
+- **Manual save** with Cmd+S, and an unsaved changes prompt when closing or switching files
 - **Live reload** that automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
-- **Find in document** with live highlighting and match navigation (Cmd+F)
+- **Find in document** with live highlighting and match navigation (Cmd+F), in preview and editor
 - **Table of contents** to jump to any section from the toolbar dropdown
 - **Folder mode** to browse a directory of Markdown files with a sidebar, similar to Preview.app
 - **Export** as PDF (Cmd+E), HTML (Cmd+Shift+E), or print (Cmd+P)
@@ -42,7 +38,7 @@ A macOS markdown preview app built for developers, with AI cost estimation, side
 - **Relative image loading** for images referenced with relative paths
 - **Pinch-to-zoom** to scale content with trackpad gestures
 - **Auto-update** via Sparkle for automatic update checking and installation
-- **Dark mode** following system appearance
+- **Appearance** switching between Light, Dark, and System from the toolbar
 - **CLI tool** to open files and folders from the terminal with `mdp`
 
 ## AI Cost Estimation
@@ -56,6 +52,10 @@ Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No n
 | Shortcut | Action |
 |----------|--------|
 | Cmd+F | Find in document |
+| Cmd+S | Save |
+| Cmd+B | Bold (in editor) |
+| Cmd+I | Italic (in editor) |
+| Cmd+K | Link (in editor) |
 | Cmd+E | Export as PDF |
 | Cmd+Shift+E | Export as HTML |
 | Cmd+P | Print |
