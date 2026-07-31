@@ -43,6 +43,8 @@ A macOS markdown preview app built for developers, with light editing, AI cost e
 
 ## AI Cost Estimation
 
+<img src="docs/ai-cost.png" alt="Estimated input cost across models">
+
 The status bar shows word count, character count, estimated token count, and AI processing cost.
 Click the cost amount to see a breakdown across GPT-5.4, GPT-4.1-mini, GPT-4.1-nano, Claude Opus 4.7, Claude Sonnet 4.6, and Claude Haiku 4.5.
 Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No network calls required.
