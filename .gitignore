@@ -76,6 +76,7 @@ DerivedData/
 build/bin/
 build/tmp/
 build/*.xcarchive/
+build/archives/
 
 # Editor build (CodeMirror)
 editor/node_modules/
