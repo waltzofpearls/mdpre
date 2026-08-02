@@ -117,6 +117,13 @@ Or manually create a symlink:
 sudo ln -sf /Applications/Markdown\ Preview.app/Contents/MacOS/mdp /usr/local/bin/mdp
 ```
 
+### Mac App Store limitation
+
+In the Mac App Store build, `mdp` can only open files under your home directory. This
+is a sandbox restriction: a sandboxed tool is not granted access to paths passed as
+command line arguments, so `mdp /tmp/notes.md` fails while `mdp ~/notes.md` works.
+The direct download build has no such limit.
+
 ## License
 
 [Apache 2.0](LICENSE)

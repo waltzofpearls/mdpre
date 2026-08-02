@@ -104,11 +104,7 @@ enum CLIInstaller {
         alert.addButton(withTitle: "Copy & Open Terminal")
         alert.addButton(withTitle: "Cancel")
 
-        let textField = NSTextField(wrappingLabelWithString: command)
-        textField.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
-        textField.isSelectable = true
-        textField.widthAnchor.constraint(greaterThanOrEqualToConstant: 400).isActive = true
-        alert.accessoryView = textField
+        alert.accessoryView = commandBox(command)
 
         if alert.runModal() == .alertFirstButtonReturn {
             NSPasteboard.general.clearContents()
@@ -117,14 +113,62 @@ enum CLIInstaller {
         }
     }
 
+    /// Slightly darker than the alert background in both appearances. The semantic
+    /// fill colors render lighter than the alert in light mode, so the tint is
+    /// specified explicitly.
+    private static let commandBoxFill = NSColor(name: "commandBoxFill") { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor.black.withAlphaComponent(0.28)
+            : NSColor.black.withAlphaComponent(0.06)
+    }
+
+    /// A selectable code box for one or more commands.
+    ///
+    /// NSBox is used rather than a layer backed view so the fill and border follow
+    /// the light and dark appearance. The box is given an explicit frame because
+    /// NSAlert sizes its accessory view from the frame, not from constraints.
+    private static func commandBox(_ command: String) -> NSView {
+        let label = NSTextField(labelWithString: command)
+        label.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        label.isSelectable = true
+        label.usesSingleLineMode = false
+        label.maximumNumberOfLines = 0
+        label.lineBreakMode = .byClipping
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        let box = NSBox()
+        box.boxType = .custom
+        box.fillColor = commandBoxFill
+        box.borderColor = .separatorColor
+        box.borderWidth = 1
+        box.cornerRadius = 6
+        box.titlePosition = .noTitle
+        box.contentViewMargins = .zero
+        box.addSubview(label)
+
+        let padX: CGFloat = 12, padY: CGFloat = 9
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: box.leadingAnchor, constant: padX),
+            label.trailingAnchor.constraint(equalTo: box.trailingAnchor, constant: -padX),
+            label.topAnchor.constraint(equalTo: box.topAnchor, constant: padY),
+            label.bottomAnchor.constraint(equalTo: box.bottomAnchor, constant: -padY),
+        ])
+
+        let size = label.intrinsicContentSize
+        box.frame = NSRect(x: 0, y: 0, width: size.width + padX * 2, height: size.height + padY * 2)
+        return box
+    }
+
     // MARK: - Alerts
 
     private static func showSuccessAlert() {
-        showAlert(
-            title: "Command Line Tool Installed",
-            message: "The 'mdp' command is now available in your terminal.\n\nUsage:\n  mdp README.md\n  mdp ./docs/",
-            style: .informational
-        )
+        let alert = NSAlert()
+        alert.messageText = "Command Line Tool Installed"
+        alert.informativeText = "The 'mdp' command is now available in your terminal. Usage:"
+        alert.alertStyle = .informational
+        alert.accessoryView = commandBox("mdp README.md\nmdp ./docs/")
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     private static func showAlert(title: String, message: String, style: NSAlert.Style) {

@@ -47,6 +47,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
+    /// Uninstall only shows a `sudo rm -f` command for the user to run in Terminal,
+    /// so the menu cannot know the result until the app is activated again.
+    func applicationDidBecomeActive(_ notification: Notification) {
+        CLIInstallState.shared.refresh()
+    }
+
     func application(_ application: NSApplication, open urls: [URL]) {
         var fileURLs: [URL] = []
 
