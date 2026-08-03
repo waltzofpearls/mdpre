@@ -28,9 +28,13 @@ struct FolderContentView: View {
     @State private var stats: DocumentStats = .empty
     @State private var editorWebView: WKWebView?
     @State private var isRevertingSelection = false
+    @State private var speech = SpeechController.shared
 
     var body: some View {
         VStack(spacing: 0) {
+            if speech.isSpeaking {
+                SpeechBar()
+            }
             if viewModel.showFindBar {
                 FindBar(isVisible: $viewModel.showFindBar, viewMode: viewModel.viewMode)
             }
@@ -75,6 +79,8 @@ struct FolderContentView: View {
         }
         .onChange(of: viewModel.viewMode) { _, _ in
             viewModel.showFindBar = false
+            // Speech reads the rendered preview, which edit and split replace.
+            SpeechController.shared.stop()
         }
         .onChange(of: viewModel.selectedFile) { oldValue, newValue in
             if isRevertingSelection {
@@ -101,6 +107,8 @@ struct FolderContentView: View {
             }
 
             viewModel.clearDirtyState()
+            // The blocks being spoken belong to the file being navigated away from.
+            SpeechController.shared.stop()
 
             if let newValue {
                 viewModel.loadContent(for: newValue)

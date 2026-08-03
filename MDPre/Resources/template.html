@@ -60,12 +60,35 @@
         background: #f9a825;
         border-radius: 2px;
     }
+    /* Speech highlighting uses the CSS Custom Highlight API rather than wrapping
+       elements, so the DOM is never mutated, stored node references stay valid
+       while speaking, and find in page cannot collide with it. */
+    ::highlight(speech-block) {
+        background-color: rgba(140, 50, 190, 0.14);
+    }
+    ::highlight(speech-word) {
+        background-color: rgba(140, 50, 190, 0.36);
+    }
+    .markdown-body input[type=checkbox].speech-active {
+        outline: 2px solid rgba(140, 50, 190, 0.70);
+        outline-offset: 2px;
+        border-radius: 3px;
+    }
     @media (prefers-color-scheme: dark) {
         mark.find-highlight {
             background: #7b6a1e;
         }
         mark.find-current {
             background: #b8941e;
+        }
+        ::highlight(speech-block) {
+            background-color: rgba(202, 140, 255, 0.20);
+        }
+        ::highlight(speech-word) {
+            background-color: rgba(202, 140, 255, 0.45);
+        }
+        .markdown-body input[type=checkbox].speech-active {
+            outline-color: rgba(202, 140, 255, 0.75);
         }
     }
     @media print {
@@ -93,6 +116,12 @@
         }
         mark.find-highlight, mark.find-current {
             background: none;
+        }
+        ::highlight(speech-block), ::highlight(speech-word) {
+            background-color: transparent;
+        }
+        .markdown-body input[type=checkbox].speech-active {
+            outline: none;
         }
     }
 </style>
@@ -123,6 +152,7 @@
 
     function renderMarkdown(text, baseURL) {
         clearFind();
+        clearSpeechHighlight();
         document.documentElement.scrollTop = 0;
         if (baseURL) {
             text = text.replace(/(!\[[^\]]*\]\()([^)]+)(\))/g, (_, pre, src, post) =>
@@ -212,6 +242,162 @@
             content.style.maxWidth = 'none';
             content.style.margin = '0';
         }
+    }
+
+    // --- Speech ---
+
+    // Highlighting maps a spoken offset back to a text node. Whitespace is collapsed
+    // and a few words are invented, so each stretch copied verbatim from one text
+    // node is recorded as a segment. Offsets no segment covers are the invented ones.
+
+    let speechBlocks = [];
+    let speechIndex = -1;
+    let speechCheckbox = null;
+
+    // Registered once, then mutated. Swapping the registry entry on every word
+    // leaves the old registration to be torn down roughly two hundred times per
+    // document, and stale paint has been observed in the app that way.
+    const speechBlockHighlight = new Highlight();
+    const speechWordHighlight = new Highlight();
+    CSS.highlights.set('speech-block', speechBlockHighlight);
+    CSS.highlights.set('speech-word', speechWordHighlight);
+
+    function newSpokenText() {
+        return { text: '', segments: [] };
+    }
+
+    // Words with no source in the document, a checkbox state or a cell separator.
+    function appendSynthesized(spoken, words) {
+        spoken.text += words;
+    }
+
+    function appendElement(spoken, el) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+            const source = node.textContent;
+            let segment = null;
+            for (let i = 0; i < source.length; i++) {
+                if (/\s/.test(source[i])) {
+                    if (spoken.text.length && !spoken.text.endsWith(' ')) spoken.text += ' ';
+                    segment = null;   // whitespace collapsed, so the copied stretch ends
+                    continue;
+                }
+                if (!segment) {
+                    segment = { start: spoken.text.length, node, nodeOffset: i, length: 0 };
+                    spoken.segments.push(segment);
+                }
+                spoken.text += source[i];
+                segment.length++;
+            }
+        }
+    }
+
+    function extractSpeechChunks() {
+        const content = document.getElementById('content');
+        speechBlocks = [];
+        clearSpeechHighlight();
+        const chunks = [];
+        const selector = 'h1, h2, h3, h4, h5, h6, p, li, tr';
+        for (const el of content.querySelectorAll(selector)) {
+            if (el.closest('pre')) continue;   // never read code aloud
+            // Only the innermost block speaks, or a loose list item would be read
+            // twice, once as the li and again as the p inside it.
+            if (el.querySelector(selector)) continue;
+
+            const spoken = newSpokenText();
+            let checkbox = null;
+            if (el.tagName === 'TR') {
+                // A whole row as one phrase. Per cell, every number is its own utterance.
+                for (const cell of el.children) {
+                    if (!cell.textContent.trim()) continue;
+                    if (spoken.text) appendSynthesized(spoken, ', ');
+                    appendElement(spoken, cell);
+                }
+            } else {
+                checkbox = el.querySelector('input[type=checkbox]');
+                if (checkbox) {
+                    appendSynthesized(spoken, checkbox.checked ? 'Done. ' : 'Not done. ');
+                }
+                appendElement(spoken, el);
+            }
+
+            const text = spoken.text.trim();
+            if (!text) continue;
+            speechBlocks.push({ el, checkbox, segments: spoken.segments });
+            chunks.push(text);
+        }
+        return JSON.stringify(chunks);
+    }
+
+    function rangeForSpokenOffsets(segments, start, length) {
+        const end = start + length;
+        let range = null;
+        for (const segment of segments) {
+            if (segment.start + segment.length <= start || segment.start >= end) continue;
+            const from = segment.nodeOffset + Math.max(0, start - segment.start);
+            const to = segment.nodeOffset + Math.min(segment.length, end - segment.start);
+            if (!range) {
+                range = document.createRange();
+                range.setStart(segment.node, from);
+            }
+            range.setEnd(segment.node, to);
+        }
+        return range;
+    }
+
+    function markSpeechCheckbox(checkbox) {
+        if (speechCheckbox === checkbox) return;
+        if (speechCheckbox) speechCheckbox.classList.remove('speech-active');
+        speechCheckbox = checkbox;
+        if (checkbox) checkbox.classList.add('speech-active');
+    }
+
+    // WebKit can leave a sliver of the old highlight along the bottom of a block
+    // once the highlight moves away. Briefly giving the element its own stacking
+    // context forces that area to repaint. Once per block, never per word.
+    function repaintBlock(el) {
+        if (!el) return;
+        el.style.opacity = '0.999';
+        void el.offsetHeight;
+        el.style.opacity = '';
+    }
+
+    function highlightSpeech(index, start, length) {
+        const block = speechBlocks[index];
+        if (!block) return;
+
+        const blockRange = document.createRange();
+        blockRange.selectNodeContents(block.el);
+        speechBlockHighlight.clear();
+        speechBlockHighlight.add(blockRange);
+
+        const wordRange = rangeForSpokenOffsets(block.segments, start, length);
+        speechWordHighlight.clear();
+        if (wordRange) speechWordHighlight.add(wordRange);
+
+        // A checkbox holds no text, so a range over it is empty and the highlight
+        // API cannot reach it. No range means an invented word is being spoken,
+        // which on a task item is its state, so mark the box itself instead.
+        markSpeechCheckbox(wordRange ? null : block.checkbox);
+
+        // Only scroll when the block changes. Following every word jitters the
+        // page, and scrollIntoViewIfNeeded leaves it alone while it is visible.
+        if (index !== speechIndex) {
+            const previous = speechBlocks[speechIndex];
+            speechIndex = index;
+            repaintBlock(previous && previous.el);
+            block.el.scrollIntoViewIfNeeded();
+        }
+    }
+
+    function clearSpeechHighlight() {
+        const previous = speechBlocks[speechIndex];
+        speechBlockHighlight.clear();
+        speechWordHighlight.clear();
+        markSpeechCheckbox(null);
+        speechIndex = -1;
+        repaintBlock(previous && previous.el);
     }
 
     // --- Find in page ---

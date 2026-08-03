@@ -35,9 +35,13 @@ struct ContentView: View {
     @State private var scrollPercent: Double = 0
     @State private var stats: DocumentStats = .empty
     @State private var editorWebView: WKWebView?
+    @State private var speech = SpeechController.shared
 
     var body: some View {
         VStack(spacing: 0) {
+            if speech.isSpeaking {
+                SpeechBar()
+            }
             if showFindBar {
                 FindBar(isVisible: $showFindBar, viewMode: viewMode)
             }
@@ -75,6 +79,7 @@ struct ContentView: View {
         .onDisappear {
             fileWatcher?.stopWatching()
             fileWatcher = nil
+            SpeechController.shared.stop()
         }
         .onChange(of: document.text) { _, newValue in
             displayText = newValue
@@ -86,6 +91,8 @@ struct ContentView: View {
         }
         .onChange(of: viewMode) { _, _ in
             showFindBar = false
+            // Speech reads the rendered preview, which edit and split replace.
+            SpeechController.shared.stop()
         }
         .focusedSceneValue(\.exportHandler, exportHandler)
         .toolbar {
@@ -94,6 +101,10 @@ struct ContentView: View {
             }
             ToolbarItem(placement: .automatic) {
                 TableOfContentsToolbarButton()
+                    .disabled(viewMode != .preview)
+            }
+            ToolbarItem(placement: .automatic) {
+                SpeechToolbarButton()
                     .disabled(viewMode != .preview)
             }
             ToolbarItem(placement: .automatic) {
