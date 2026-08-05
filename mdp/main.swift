@@ -32,6 +32,11 @@ if args.contains("--install") {
     exit(0)
 }
 
+if args.contains("--version") || args.contains("-v") {
+    printVersion()
+    exit(0)
+}
+
 openFiles(Array(args))
 
 // MARK: - Functions
@@ -43,8 +48,9 @@ func printUsage() {
     Open markdown files in Markdown Preview.
 
     Options:
-      --install    Install mdp to /usr/local/bin
-      -h, --help   Show this help message
+      --install       Install mdp to /usr/local/bin
+      -h, --help      Show this help message
+      -v, --version   Show the version
 
     Examples:
       mdp README.md
@@ -52,6 +58,15 @@ func printUsage() {
       mdp file1.md file2.md
     """
     print(usage)
+}
+
+/// The version of the app bundle this command ships inside.
+func printVersion() {
+    let appURL = findApp()
+    let info = NSDictionary(contentsOf: appURL.appendingPathComponent("Contents/Info.plist"))
+    let short = info?["CFBundleShortVersionString"] as? String ?? "unknown"
+    let build = info?["CFBundleVersion"] as? String ?? "?"
+    print("Markdown Preview \(short) (\(build))")
 }
 
 func openFiles(_ paths: [String]) {
@@ -103,8 +118,11 @@ func openWithApp(_ urls: [URL]) {
 }
 
 func findApp() -> URL {
-    // If running from inside the app bundle, use that app
-    let execURL = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL
+    // Prefer the bundle this command was installed from. argv[0] is just "mdp" when
+    // run from PATH, so ask for the real executable path, then resolve the install
+    // symlink to reach the bundle it points into.
+    let execURL = (Bundle.main.executableURL
+        ?? URL(fileURLWithPath: CommandLine.arguments[0])).resolvingSymlinksInPath()
     let execDir = execURL.deletingLastPathComponent()
 
     // Check if we're inside an .app bundle (Contents/MacOS/mdp)
