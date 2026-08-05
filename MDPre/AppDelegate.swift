@@ -30,11 +30,14 @@ extension NSToolbarItem.Identifier {
     static let tableOfContents = NSToolbarItem.Identifier("tableOfContents")
     static let viewMode = NSToolbarItem.Identifier("viewMode")
     static let appearance = NSToolbarItem.Identifier("appearance")
+    static let speech = NSToolbarItem.Identifier("speech")
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var folderWindows: [String: NSWindow] = [:]
     private var folderViewModels: [String: FolderViewModel] = [:]
+    /// Lets the toolbar delegate reach the folder a toolbar belongs to.
+    private var toolbarViewModels: [ObjectIdentifier: FolderViewModel] = [:]
     private var themeModeObserver: NSKeyValueObservation?
 
     /// Stops AppKit from creating an untitled document, so the open panel is shown
@@ -148,6 +151,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Toolbar — set delegate before assigning to window
         let toolbar = NSToolbar(identifier: "FolderToolbar")
         toolbar.delegate = self
+        // Registered before the toolbar is attached, since attaching is what asks
+        // the delegate for items.
+        toolbarViewModels[ObjectIdentifier(toolbar)] = viewModel
         toolbar.displayMode = .iconOnly
         window.toolbar = toolbar
 
@@ -189,6 +195,7 @@ extension AppDelegate: NSToolbarDelegate {
             .viewMode,
             .flexibleSpace,
             .tableOfContents,
+            .speech,
             .appearance,
         ]
     }
@@ -234,6 +241,14 @@ extension AppDelegate: NSToolbarDelegate {
             item.view = button
             item.label = "Table of Contents"
             item.toolTip = "Table of Contents"
+            return item
+        case .speech:
+            guard let viewModel = toolbarViewModels[ObjectIdentifier(toolbar)] else { return nil }
+            let item = NSToolbarItem(itemIdentifier: .speech)
+            let hosting = NSHostingView(rootView: FolderSpeechToolbarButton(viewModel: viewModel))
+            hosting.frame.size = hosting.fittingSize
+            item.view = hosting
+            item.label = "Speak"
             return item
         case .appearance:
             let mode = currentThemeMode
@@ -347,6 +362,10 @@ extension AppDelegate: NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
+        SpeechController.shared.stopIfSpeaking(in: window)
+        if let toolbar = window.toolbar {
+            toolbarViewModels.removeValue(forKey: ObjectIdentifier(toolbar))
+        }
         let closedPaths = folderWindows.filter { $0.value === window }.map(\.key)
         for path in closedPaths {
             folderWindows.removeValue(forKey: path)
