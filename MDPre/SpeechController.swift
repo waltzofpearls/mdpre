@@ -66,6 +66,8 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
     /// After a skip the queue starts partway through, hence `queueBase`.
     private var utterances: [AVSpeechUtterance] = []
     private var queueBase = 0
+    /// Set when a change was made while paused, to be applied on resume.
+    private var needsRequeue = false
     private var chunks: [String] = []
     private var voice: AVSpeechSynthesisVoice?
     /// Chosen voice per language, keyed by two letter code. Absent means automatic.
@@ -108,7 +110,7 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
         UserDefaults.standard.set(voiceOverrides, forKey: Self.voiceOverridesKey)
         voice = resolveVoice()
         guard isSpeaking else { return }
-        speak(from: currentIndex)
+        if isPaused { needsRequeue = true } else { speak(from: currentIndex) }
     }
 
     private func resolveVoice() -> AVSpeechSynthesisVoice? {
@@ -204,7 +206,7 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
         guard isSpeaking, totalCharacters > 0 else { return }
         let target = Int(Double(totalCharacters) * min(max(fraction, 0), 1))
         let index = characterOffsets.lastIndex { $0 <= target } ?? 0
-        speak(from: index)
+        move(to: index)
     }
 
     /// Queues from `index` to the end. Requeuing is the only way to change pace or
@@ -224,18 +226,31 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
         queueBase = index
         currentIndex = index
         spokenCharacters = characterOffsets.indices.contains(index) ? characterOffsets[index] : 0
+        needsRequeue = false
         isSpeaking = true
         isPaused = false
     }
 
+    /// Moves to a block. While paused the queue is left alone and the change is
+    /// applied on resume, since requeuing starts speaking immediately.
+    private func move(to index: Int) {
+        guard chunks.indices.contains(index) else { return }
+        guard isPaused else { return speak(from: index) }
+        needsRequeue = true
+        currentIndex = index
+        spokenCharacters = characterOffsets[index]
+        // Zero length, so the block is marked without a word inside it.
+        webView?.evaluateJavaScript("highlightSpeech(\(index), 0, 0)")
+    }
+
     func skipForward() {
         guard isSpeaking else { return }
-        currentIndex + 1 < chunks.count ? speak(from: currentIndex + 1) : stop()
+        currentIndex + 1 < chunks.count ? move(to: currentIndex + 1) : stop()
     }
 
     func skipBackward() {
         guard isSpeaking else { return }
-        speak(from: max(currentIndex - 1, 0))
+        move(to: max(currentIndex - 1, 0))
     }
 
     /// Nearest match, so a rate persisted by an earlier build still resolves.
@@ -253,7 +268,7 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
         rate = newRate
         UserDefaults.standard.set(newRate, forKey: Self.rateKey)
         guard isSpeaking else { return }
-        speak(from: currentIndex)
+        if isPaused { needsRequeue = true } else { speak(from: currentIndex) }
     }
 
     /// The dominant language of the document, falling back to the system language
@@ -297,6 +312,8 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
 
     func resume() {
         guard isPaused else { return }
+        // A change made while paused was deferred, so the queue is rebuilt now.
+        guard !needsRequeue else { return speak(from: currentIndex) }
         _ = synthesizer.continueSpeaking()
         isPaused = false
     }
@@ -313,6 +330,7 @@ final class SpeechController: NSObject, AVSpeechSynthesizerDelegate {
         }
         utterances.removeAll()
         chunks.removeAll()
+        needsRequeue = false
         characterOffsets.removeAll()
         totalCharacters = 0
         spokenCharacters = 0
