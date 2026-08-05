@@ -4,7 +4,7 @@
 
 # MDPre: Markdown Preview
 
-A macOS markdown preview app built for developers, with light editing, AI cost estimation, and live reload.
+A macOS markdown preview app built for developers, with light editing, text to speech, AI cost estimation, and live reload.
 
 **Single file preview**
 
@@ -18,9 +18,17 @@ A macOS markdown preview app built for developers, with light editing, AI cost e
 
 <img src="docs/split.png" alt="Split view with editor and preview">
 
+**Text to speech with the current word highlighted**
+
+<img src="docs/speech.png" alt="Text to speech following along word by word">
+
 **Folder mode with sidebar**
 
 <img src="docs/folder-mode.png" alt="Folder mode with sidebar">
+
+**Dark mode**
+
+<img src="docs/dark-mode.png" alt="Single file preview in dark mode">
 
 ## Features
 
@@ -30,6 +38,7 @@ A macOS markdown preview app built for developers, with light editing, AI cost e
 - **Side-by-side view** with editor and preview, synchronized scrolling
 - **Manual save** with Cmd+S, and an unsaved changes prompt when closing or switching files
 - **Live reload** that automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
+- **Text to speech** with the current word highlighted as it reads, plus play, pause, skip, a draggable progress bar, adjustable speed, and voice selection per language
 - **Find in document** with live highlighting and match navigation (Cmd+F), in preview and editor
 - **Table of contents** to jump to any section from the toolbar dropdown
 - **Folder mode** to browse a directory of Markdown files with a sidebar, similar to Preview.app
@@ -105,6 +114,7 @@ mdp README.md          # preview a single file
 mdp ./docs/            # preview a folder with sidebar
 mdp file1.md file2.md  # open multiple files
 mdp --help             # show usage
+mdp --version          # show the version
 ```
 
 ### Installing
