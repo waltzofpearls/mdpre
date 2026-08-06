@@ -33,30 +33,22 @@ A macOS markdown preview app built for developers, with light editing, text to s
 ## Features
 
 - **GitHub Flavored Markdown** rendered with [marked](https://github.com/markedjs/marked) and [github-markdown-css](https://github.com/sindresorhus/github-markdown-css), with syntax highlighting via [highlight.js](https://highlightjs.org/)
-- **Document stats** showing word count, character count, token count, and estimated AI processing cost
-- **Light editing** with a [CodeMirror 6](https://codemirror.net/) editor, syntax highlighting, and a formatting toolbar for bold, italic, headings, lists, links, images, tables, and code blocks
-- **Side-by-side view** with editor and preview, synchronized scrolling
-- **Manual save** with Cmd+S, and an unsaved changes prompt when closing or switching files
-- **Live reload** that automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
 - **Text to speech** with the current word highlighted as it reads, plus play, pause, skip, a draggable progress bar, adjustable speed, and voice selection per language
+- **Live reload** that automatically refreshes when files are edited in an external editor (vim, VS Code, etc.)
+- **CLI tool** to open files and folders from the terminal with `mdp`
+- **Folder mode** to browse a directory of Markdown files with a sidebar, similar to Preview.app
+- **Light editing** with a [CodeMirror 6](https://codemirror.net/) editor, syntax highlighting, and a formatting toolbar for bold, italic, headings, lists, links, images, tables, and code blocks
+- **Side by side view** with editor and preview, synchronized scrolling
+- **Manual save** with Cmd+S, and an unsaved changes prompt when closing or switching files
 - **Find in document** with live highlighting and match navigation (Cmd+F), in preview and editor
 - **Table of contents** to jump to any section from the toolbar dropdown
-- **Folder mode** to browse a directory of Markdown files with a sidebar, similar to Preview.app
 - **Export** as PDF (Cmd+E), HTML (Cmd+Shift+E), or print (Cmd+P)
 - **Internal link navigation** between Markdown documents via relative links
 - **Relative image loading** for images referenced with relative paths
-- **Pinch-to-zoom** to scale content with trackpad gestures
-- **Auto-update** via Sparkle for automatic update checking and installation
 - **Appearance** switching between Light, Dark, and System from the toolbar
-- **CLI tool** to open files and folders from the terminal with `mdp`
-
-## AI Cost Estimation
-
-<img src="docs/ai-cost.png" alt="Estimated input cost across models">
-
-The status bar shows word count, character count, estimated token count, and AI processing cost.
-Click the cost amount to see a breakdown across GPT-5.4, GPT-4.1-mini, GPT-4.1-nano, Claude Opus 4.7, Claude Sonnet 4.6, and Claude Haiku 4.5.
-Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No network calls required.
+- **Pinch to zoom** to scale content with trackpad gestures
+- **Document stats** showing word count, character count, token count, and estimated AI processing cost
+- **Automatic updates** via Sparkle for update checking and installation
 
 ## Keyboard Shortcuts
 
@@ -81,7 +73,7 @@ Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No n
 ## Requirements
 
 - macOS 15.7 or later
-- Xcode 16 or later (to build from source)
+- Xcode 26 or later to build from source, since the app icon uses the Icon Composer format
 
 ## Build
 
@@ -105,7 +97,7 @@ This runs: xcodebuild, gon sign, create-dmg, gon notarize. See the [Makefile](Ma
 
 ## CLI Tool
 
-Markdown Preview bundles a command-line tool called `mdp`.
+Markdown Preview bundles a command line tool called `mdp`.
 
 ### Usage
 
@@ -127,12 +119,20 @@ Or manually create a symlink:
 sudo ln -sf /Applications/Markdown\ Preview.app/Contents/MacOS/mdp /usr/local/bin/mdp
 ```
 
-### Mac App Store limitation
+### Mac App Store Limitation
 
-In the Mac App Store build, `mdp` can only open files under your home directory. This
-is a sandbox restriction: a sandboxed tool is not granted access to paths passed as
-command line arguments, so `mdp /tmp/notes.md` fails while `mdp ~/notes.md` works.
-The direct download build has no such limit.
+In the Mac App Store build, `mdp` can only open files and folders under your home
+directory. The command line tool is sandboxed there, and its file access is granted
+relative to your home folder, so `mdp ~/notes.md` works while `mdp /tmp/notes.md`
+fails. The direct download build has no such limit.
+
+## AI Cost Estimation
+
+<img src="docs/ai-cost.png" alt="Estimated input cost across models">
+
+The status bar shows word count, character count, estimated token count, and AI processing cost.
+Click the cost amount to see a breakdown across GPT-5.4, GPT-4.1-mini, GPT-4.1-nano, Claude Opus 4.7, Claude Sonnet 4.6, and Claude Haiku 4.5.
+Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No network calls required.
 
 ## License
 

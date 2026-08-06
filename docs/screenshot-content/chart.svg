@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 100">
+  <rect width="600" height="100" rx="6" fill="#f6f8fa"/>
+
+  <text x="300" y="16" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11" font-weight="600" fill="#1f2328">Average Extraction Score by Method</text>
+
+  <!-- Baseline -->
+  <line x1="30" y1="78" x2="580" y2="78" stroke="#d0d7de" stroke-width="0.5"/>
+
+  <!-- Bars -->
+  <rect x="42" y="25" width="60" height="53" rx="3" fill="#2da44e"/>
+  <rect x="135" y="28" width="60" height="50" rx="3" fill="#0969da"/>
+  <rect x="228" y="35" width="60" height="43" rx="3" fill="#8250df"/>
+  <rect x="321" y="30" width="60" height="48" rx="3" fill="#bf8700"/>
+  <rect x="414" y="32" width="60" height="46" rx="3" fill="#cf222e"/>
+  <rect x="507" y="27" width="60" height="51" rx="3" fill="#1a7f37"/>
+
+  <!-- Bar value labels -->
+  <text x="72" y="21" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" fill="#1f2328">92</text>
+  <text x="165" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" fill="#1f2328">87</text>
+  <text x="258" y="31" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" fill="#1f2328">78</text>
+  <text x="351" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" fill="#1f2328">85</text>
+  <text x="444" y="28" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" fill="#1f2328">83</text>
+  <text x="537" y="23" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" font-weight="600" fill="#1f2328">88</text>
+
+  <!-- X axis labels -->
+  <text x="72" y="92" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#656d76">Espresso</text>
+  <text x="165" y="92" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#656d76">Pour Over</text>
+  <text x="258" y="92" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#656d76">French Press</text>
+  <text x="351" y="92" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#656d76">Cold Brew</text>
+  <text x="444" y="92" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#656d76">AeroPress</text>
+  <text x="537" y="92" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#656d76">Moka Pot</text>
+</svg>

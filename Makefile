@@ -105,9 +105,21 @@ archive-appstore: ## Archive App Store build for local testing
 		archive \
 		-archivePath $(APPSTORE_ARCHIVE)
 	rm -rf "$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app/Contents/Frameworks/Sparkle.framework"
+# Removing a signed framework breaks the app's seal, so the archive cannot launch
+# and the manual test below is impossible. Reseal the outer bundle. Nested code,
+# including mdp and its sandbox entitlements, keeps its own signature.
+	codesign --force --sign "Apple Development" \
+		--entitlements MDPre/MDPre-AppStore.entitlements \
+		"$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app"
+	codesign --verify --strict "$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app"
 	@echo "Archive ready at $(APPSTORE_ARCHIVE)"
-	@echo "Test app: $(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app"
 	@echo "Build number: $(BUILD_VERSION)"
+	@echo ""
+	@echo "To test it, copy the app OUT of the archive first. Nothing launches from"
+	@echo "inside an .xcarchive, which is itself a bundle:"
+	@echo ""
+	@echo "  cp -R \"$(APPSTORE_ARCHIVE)/Products/Applications/$(APP_NAME).app\" /tmp/"
+	@echo "  open \"/tmp/$(APP_NAME).app\""
 
 .PHONY: release-appstore
 release-appstore: archive-appstore ## Archive and upload to App Store Connect
