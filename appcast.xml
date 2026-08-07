@@ -3,12 +3,12 @@
     <channel>
         <title>Markdown Preview</title>
         <item>
-            <title>1.7.0</title>
-            <pubDate>Thu, 06 Aug 2026 08:33:13 +0000</pubDate>
-            <sparkle:version>54</sparkle:version>
-            <sparkle:shortVersionString>1.7.0</sparkle:shortVersionString>
+            <title>1.7.1</title>
+            <pubDate>Fri, 07 Aug 2026 02:24:33 +0000</pubDate>
+            <sparkle:version>55</sparkle:version>
+            <sparkle:shortVersionString>1.7.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.7</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/waltzofpearls/mdpre/releases/download/v1.7.0/Markdown-Preview.dmg" length="6140796" type="application/octet-stream" sparkle:edSignature="WIluXC47jb9X5gFSuWU0OB+TaE5xgZJpwxFTEYzL6gQzctNK63iocg/OY2cZfeVKC9EebhkmlghZ08qnHoRaCQ=="/>
+            <enclosure url="https://github.com/waltzofpearls/mdpre/releases/download/v1.7.1/Markdown-Preview.dmg" length="6150971" type="application/octet-stream" sparkle:edSignature="DKKWuBAa0Ckbe9wndqvK8hBc3HfJ7xsPAHNWEo7wYWB2b6050k2Phr1yI0fJkczaghkPPoFw5XxmNwbaiVnVCQ=="/>
         </item>
     </channel>
 </rss>
