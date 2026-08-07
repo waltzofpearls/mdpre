@@ -60,6 +60,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         var fileURLs: [URL] = []
 
         for url in urls {
+            if url.scheme == "mdpre" {
+                if let target = Self.path(fromScheme: url) { openFromCommandLine(target) }
+                continue
+            }
             var isDir: ObjCBool = false
             if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir),
                isDir.boolValue {
@@ -73,6 +77,49 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSDocumentController.shared.openDocument(
                 withContentsOf: fileURL,
                 display: true
+            ) { _, _, _ in }
+        }
+    }
+
+    /// The file path carried by an `mdpre://open?path=...` URL.
+    private static func path(fromScheme url: URL) -> URL? {
+        guard let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+            .queryItems?.first(where: { $0.name == "path" })?.value, !path.isEmpty
+        else { return nil }
+        return URL(fileURLWithPath: path).standardizedFileURL
+    }
+
+    /// Opens a path handed over by the sandboxed command line tool, which can send
+    /// the path but not access to it. Uses a saved bookmark when one covers the
+    /// folder, otherwise asks the user to grant it once.
+    private func openFromCommandLine(_ url: URL) {
+        var isDir: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
+        let isFolder = exists && isDir.boolValue
+        let folder = isFolder ? url : url.deletingLastPathComponent()
+
+        if FolderAccessManager.shared.startAccessing(directory: folder) {
+            present(url, isFolder: isFolder)
+            return
+        }
+
+        // runModal during a launch callback blocks the run loop and the alert never
+        // appears, so defer a tick.
+        DispatchQueue.main.async {
+            let reason = "Markdown Preview was asked to open this document from the terminal. To read it, the app needs access to the folder containing it."
+            FolderAccessManager.shared.requestAccess(for: folder, reason: reason) { granted in
+                guard granted else { return }
+                self.present(url, isFolder: isFolder)
+            }
+        }
+    }
+
+    private func present(_ url: URL, isFolder: Bool) {
+        if isFolder {
+            openFolderWindow(for: url)
+        } else {
+            NSDocumentController.shared.openDocument(
+                withContentsOf: url, display: true
             ) { _, _, _ in }
         }
     }
