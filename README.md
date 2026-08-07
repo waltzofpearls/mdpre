@@ -121,18 +121,18 @@ sudo ln -sf /Applications/Markdown\ Preview.app/Contents/MacOS/mdp /usr/local/bi
 
 ### Mac App Store Limitation
 
-In the Mac App Store build, `mdp` can only open files and folders under your home
-directory. The command line tool is sandboxed there, and its file access is granted
-relative to your home folder, so `mdp ~/notes.md` works while `mdp /tmp/notes.md`
-fails. The direct download build has no such limit.
+In the Mac App Store build, `mdp` is sandboxed and cannot pass file access to the
+app, so the first time you open something from a folder, Markdown Preview asks for
+permission to read that folder. Grant it once and files in that folder open without
+prompting afterwards. The direct download build never prompts.
 
 ## AI Cost Estimation
 
 <img src="docs/ai-cost.png" alt="Estimated input cost across models">
 
 The status bar shows word count, character count, estimated token count, and AI processing cost.
-Click the cost amount to see a breakdown across GPT-5.4, GPT-4.1-mini, GPT-4.1-nano, Claude Opus 4.7, Claude Sonnet 4.6, and Claude Haiku 4.5.
-Token counting uses OpenAI's BPE tokenizer (o200k_base) bundled in the app. No network calls required.
+Click the cost amount to see a breakdown across several popular language models.
+Token counting uses a BPE tokenizer (o200k_base) bundled in the app. No network calls required.
 
 ## License
 

@@ -81,11 +81,15 @@ class FolderAccessManager {
         UserDefaults.standard.set(bookmarks, forKey: bookmarkKey)
     }
 
-    func requestAccess(for directory: URL, completion: @escaping (Bool) -> Void) {
+    func requestAccess(
+        for directory: URL,
+        reason: String = "This document references local images. To display them, Markdown Preview needs read access to the folder containing the document.",
+        completion: @escaping (Bool) -> Void
+    ) {
         // Pre-flight alert explaining why we need access
         let alert = NSAlert()
         alert.messageText = "Folder Access Needed"
-        alert.informativeText = "This document references local images. To display them, Markdown Preview needs read access to the folder containing the document.\n\nYou\u{2019}ll be asked to confirm the folder in the next step."
+        alert.informativeText = reason + "\n\nYou\u{2019}ll be asked to confirm the folder in the next step."
         alert.alertStyle = .informational
         alert.addButton(withTitle: "Continue")
         alert.addButton(withTitle: "Not Now")
@@ -101,7 +105,7 @@ class FolderAccessManager {
         panel.canCreateDirectories = false
         panel.allowsMultipleSelection = false
         panel.directoryURL = directory
-        panel.message = "Confirm the folder below and click Allow to display images."
+        panel.message = "Confirm the folder below and click Allow."
         panel.prompt = "Allow"
 
         panel.begin { response in

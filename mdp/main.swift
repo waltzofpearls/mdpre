@@ -98,10 +98,18 @@ func openFiles(_ paths: [String]) {
 }
 
 func openWithApp(_ urls: [URL]) {
+    // Handing over a file URL requires access to it. The sandboxed build has none,
+    // and attempting it anyway makes LaunchServices show a system error dialog, so
+    // decide up front: unreadable here means send the path as a string and let the
+    // app, which can ask the user for access, open it.
+    guard urls.allSatisfy({ FileManager.default.isReadableFile(atPath: $0.path) }) else {
+        openViaURLScheme(urls)
+        return
+    }
+
     let appURL = findApp()
     let config = NSWorkspace.OpenConfiguration()
     config.activates = true
-
     let semaphore = DispatchSemaphore(value: 0)
     NSWorkspace.shared.open(
         urls,
@@ -110,11 +118,31 @@ func openWithApp(_ urls: [URL]) {
     ) { _, error in
         if let error {
             fputs("mdp: Failed to open: \(error.localizedDescription)\n", stderr)
-            exit(1)
         }
         semaphore.signal()
     }
     semaphore.wait()
+}
+
+func openViaURLScheme(_ urls: [URL]) {
+    for url in urls {
+        var components = URLComponents()
+        components.scheme = "mdpre"
+        components.host = "open"
+        components.queryItems = [URLQueryItem(name: "path", value: url.path)]
+        guard let schemeURL = components.url else { continue }
+
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = true
+        let semaphore = DispatchSemaphore(value: 0)
+        NSWorkspace.shared.open(schemeURL, configuration: config) { _, error in
+            if let error {
+                fputs("mdp: Failed to open: \(error.localizedDescription)\n", stderr)
+            }
+            semaphore.signal()
+        }
+        semaphore.wait()
+    }
 }
 
 func findApp() -> URL {
