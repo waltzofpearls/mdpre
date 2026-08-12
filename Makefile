@@ -127,3 +127,11 @@ release-appstore: archive-appstore ## Archive and upload to App Store Connect
 		-archivePath $(APPSTORE_ARCHIVE) \
 		-exportOptionsPlist $(APPSTORE_EXPORT_OPTIONS) \
 		-allowProvisioningUpdates
+
+.PHONY: build-website
+build-website: ## Build the website into website/dist
+	python3 scripts/build_website.py
+
+.PHONY: deploy-website
+deploy-website: build-website ## Build and deploy the website to Cloudflare
+	npx wrangler deploy --config website/wrangler.jsonc

@@ -80,3 +80,9 @@ build/archives/
 
 # Editor build (CodeMirror)
 editor/node_modules/
+
+# Website build output
+website/dist/
+
+# Wrangler local cache and state
+.wrangler/
