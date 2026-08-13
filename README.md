@@ -14,13 +14,13 @@ A macOS markdown preview app built for developers, with light editing, text to s
 
 <img src="docs/edit.png" alt="Editor with formatting toolbar">
 
-**Side-by-side editor and preview**
-
-<img src="docs/split.png" alt="Split view with editor and preview">
-
 **Text to speech with the current word highlighted**
 
 <img src="docs/speech.png" alt="Text to speech following along word by word">
+
+**Side by side editor and preview**
+
+<img src="docs/split.png" alt="Split view with editor and preview">
 
 **Folder mode with sidebar**
 
